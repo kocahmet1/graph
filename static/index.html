@@ -1,0 +1,34 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Graph Generator</title>
+    <style>
+        body { max-width: 800px; margin: 0 auto; padding: 20px; }
+        textarea { width: 100%; height: 100px; }
+        img { max-width: 100%; }
+    </style>
+</head>
+<body>
+    <h1>Graph Generator</h1>
+    <textarea id="description" placeholder="Enter graph description..."></textarea>
+    <button onclick="generateGraph()">Generate Graph</button>
+    <div id="result"></div>
+
+    <script>
+        async function generateGraph() {
+            const description = document.getElementById('description').value;
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description })
+            });
+            const data = await response.json();
+            if (data.image) {
+                document.getElementById('result').innerHTML = 
+                    `<img src="data:image/png;base64,${data.image}">`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-requests==2.27.1
+google-generativeai
 matplotlib==3.3.4
 keyring
 pillow==8.4.0

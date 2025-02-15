@@ -22,17 +22,16 @@ class WebGraphGenerator:
 
     def setup_api(self):
         try:
-            # Try to load API key from config
             with open("config.json") as f:
                 config = json.load(f)
                 api_key = config.get("GOOGLE_API_KEY")
-                if api_key:
-                    print(f"Configuring API with key: {api_key[:5]}...")  # Print first 5 chars for verification
-                    genai.configure(api_key=api_key)
-                    return True
-                else:
-                    print("No API key found in config.json")
-                    return False
+                if not api_key:
+                    raise ValueError("No API key found in config.json")
+                genai.configure(api_key=api_key)
+                return True
+        except Exception as e:
+            print(f"API setup error: {str(e)}")
+            return False
         except FileNotFoundError:
             print("config.json file not found")
             return False
@@ -373,6 +372,9 @@ graph_generator = WebGraphGenerator()
 @app.route('/api/generate', methods=['POST'])
 def generate_graph():
     try:
+        if not graph_generator.setup_api():
+            return jsonify({'error': 'API key not configured. Please add your Google API key to config.json'}), 401
+            
         data = request.json
         description = data.get('description', '')
         if not description:

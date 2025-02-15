@@ -1,4 +1,4 @@
-openai==0.10.5
+requests==2.27.1
 matplotlib==3.3.4
 keyring
 pillow==8.4.0

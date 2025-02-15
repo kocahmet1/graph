@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import matplotlib.pyplot as plt
-import openai
+import requests
 import io
 import base64
 import json
@@ -25,10 +25,9 @@ class WebGraphGenerator:
             # Try to load API key from config
             with open("config.json") as f:
                 config = json.load(f)
-                api_key = config.get("OPENAI_API_KEY")
-                if api_key:
-                    print(f"Configuring API with key: {api_key[:5]}...")  # Print first 5 chars for verification
-                    openai.api_key = api_key
+                self.api_key = config.get("OPENAI_API_KEY")
+                if self.api_key:
+                    print(f"Loaded API key: {self.api_key[:5]}...")  # Print first 5 chars for verification
                     return True
                 else:
                     print("No API key found in config.json")
@@ -158,19 +157,32 @@ Requirements:
 Generate matplotlib code that reproduces ONLY the graph with perfect accuracy.
 Focus on EXACT numerical values and precise positioning of graph elements ONLY.'''
             
-            message = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                max_tokens=1024,
-                temperature=0.2,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            data = {
+                "model": "gpt-3.5-turbo",
+                "messages": [{
+                    "role": "user",
+                    "content": prompt
+                }],
+                "temperature": 0.2
+            }
+            
+            response = requests.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers=headers,
+                json=data
             )
             
-            code = message.choices[0].message.content
+            if response.status_code != 200:
+                print(f"API Error: {response.text}")
+                return None
+                
+            response_data = response.json()
+            code = response_data['choices'][0]['message']['content']
             
             # Extract code from markdown if present
             if "```python" in code:
@@ -228,13 +240,32 @@ SECTION 2 - Question Information:
 Please format your response with clear section headers."""
             
             # Convert PIL Image to the format expected by OpenAI
-            response = openai.Image.create(
-                image=image_data,
-                prompt=prompt,
-                n=1,
-                size="1024x1024"
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            data = {
+                "model": "gpt-3.5-turbo",
+                "messages": [{
+                    "role": "user",
+                    "content": prompt
+                }],
+                "temperature": 0.2
+            }
+            
+            response = requests.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers=headers,
+                json=data
             )
-            full_response = response.data[0].b64
+            
+            if response.status_code != 200:
+                print(f"API Error: {response.text}")
+                return None
+                
+            response_data = response.json()
+            full_response = response_data['choices'][0]['message']['content']
             
             # Split the response into graph analysis and question info
             sections = full_response.split("SECTION 2 - Question Information:")
@@ -370,18 +401,34 @@ Requirements:
 Generate matplotlib code that reproduces ONLY the graph with perfect accuracy.
 Focus on EXACT numerical values and precise positioning of graph elements ONLY.'''
             
-            code_response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                max_tokens=1024,
-                temperature=0.2,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": code_prompt
-                    }
-                ]
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            data = {
+                "model": "gpt-3.5-turbo",
+                "messages": [{
+                    "role": "user",
+                    "content": code_prompt
+                }],
+                "temperature": 0.2
+            }
+            
+            response = requests.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers=headers,
+                json=data
             )
-            self.current_description = f"Graph Analysis:\n{graph_analysis}\n\nSuggested Matplotlib Code:\n{code_response.choices[0].message.content}"
+            
+            if response.status_code != 200:
+                print(f"API Error: {response.text}")
+                return None
+                
+            response_data = response.json()
+            code = response_data['choices'][0]['message']['content']
+            
+            self.current_description = f"Graph Analysis:\n{graph_analysis}\n\nSuggested Matplotlib Code:\n{code}"
             
             return {
                 "description": self.current_description,

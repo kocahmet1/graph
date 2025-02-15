@@ -75,7 +75,7 @@ Requirements:
      * Maintain PRECISE bar widths and spacing
      * Position labels at EXACT coordinates
      * Example: plt.bar(x, heights, width=0.8, align='center')
-   
+
    - Line/Scatter plots:
      * Plot EXACT data point coordinates
      * Ensure intersections occur at PRECISE points
@@ -89,19 +89,19 @@ Requirements:
      * If angle B is right angle, it MUST be at vertex B
      * If point P is at origin, label P MUST be at (0,0)
      * Match labels to vertices based on geometric properties
-   
+
    - Use mathematical properties to determine label placement:
      * Right angles: Place label at the right angle vertex
      * Equal sides: Labels must match equal side endpoints
      * Special points: Origin, centroid, focus points must match labels
-   
+
    - Implement precise label positioning:
      plt.text(x, y, 'B', 
              horizontalalignment='right' if x < 0 else 'left',
              verticalalignment='top' if y < 0 else 'bottom',
              transform=ax.transData,
              offset_points=(5, 5))  # Fine-tune offset
-   
+
    - For specific geometric shapes:
      * Triangles: 
        - Right triangles: Right angle label MUST match description
@@ -113,7 +113,7 @@ Requirements:
      * Polygons:
        - Regular: Maintain symmetric label positions
        - Irregular: Match label positions to vertex properties
-   
+
    - Verify geometric properties:
      * Check angle types match labels (right, acute, obtuse)
      * Verify parallel/perpendicular sides have correct labels
@@ -158,29 +158,29 @@ Requirements:
 
 Generate matplotlib code that reproduces ONLY the graph with perfect accuracy.
 Focus on EXACT numerical values and precise positioning of graph elements ONLY.'''
-            
+
             response = model.generate_content(prompt)
             code = response.text
-            
+
             # Extract code from markdown if present
             if "```python" in code:
                 code = code.split("```python")[1].split("```")[0].strip()
             elif "```" in code:
                 code = code.split("```")[1].split("```")[0].strip()
-            
+
             # Execute the code and get the plot
             plt.clf()
             namespace = {'plt': plt, 'np': np}
             exec(code, namespace)
-            
+
             # Save plot to bytes buffer
             buf = io.BytesIO()
             plt.savefig(buf, format='png', bbox_inches='tight', dpi=300)
             buf.seek(0)
             plt.close()
-            
+
             return buf
-            
+
         except Exception as e:
             print(f"Error generating graph: {str(e)}")
             return None
@@ -189,7 +189,7 @@ Focus on EXACT numerical values and precise positioning of graph elements ONLY.'
         try:
             # Convert bytes to PIL Image
             image = Image.open(io.BytesIO(image_data))
-            
+
             model = genai.GenerativeModel('gemini-2.0-flash')
             prompt = """Analyze this graph image and provide TWO separate sections:
 
@@ -217,16 +217,16 @@ SECTION 2 - Question Information:
 2. Answer Choices: List all answer choices
 
 Please format your response with clear section headers."""
-            
+
             # Convert PIL Image to the format expected by Gemini
             response = model.generate_content([{"mime_type": "image/png", "data": image_data}, prompt])
             full_response = response.text
-            
+
             # Split the response into graph analysis and question info
             sections = full_response.split("SECTION 2 - Question Information:")
             graph_analysis = sections[0].replace("SECTION 1 - Graph Analysis (for recreation):", "").strip()
             question_section = sections[1].strip() if len(sections) > 1 else ""
-            
+
             # Extract question and answers
             question_info = {"question": "", "answers": []}
             if question_section:
@@ -238,7 +238,7 @@ Please format your response with clear section headers."""
                     elif line.startswith("2. Answer Choices:"):
                         answers_text = line.replace("2. Answer Choices:", "").strip()
                         question_info["answers"] = [ans.strip() for ans in answers_text.split(',')]
-            
+
             # Generate matplotlib code without question information
             code_prompt = f'''Generate precise matplotlib code that will EXACTLY match the graph description with perfect accuracy:
 "{graph_analysis}"
@@ -272,7 +272,7 @@ Requirements:
      * Maintain PRECISE bar widths and spacing
      * Position labels at EXACT coordinates
      * Example: plt.bar(x, heights, width=0.8, align='center')
-   
+
    - Line/Scatter plots:
      * Plot EXACT data point coordinates
      * Ensure intersections occur at PRECISE points
@@ -286,19 +286,19 @@ Requirements:
      * If angle B is right angle, it MUST be at vertex B
      * If point P is at origin, label P MUST be at (0,0)
      * Match labels to vertices based on geometric properties
-   
+
    - Use mathematical properties to determine label placement:
      * Right angles: Place label at the right angle vertex
      * Equal sides: Labels must match equal side endpoints
      * Special points: Origin, centroid, focus points must match labels
-   
+
    - Implement precise label positioning:
      plt.text(x, y, 'B', 
              horizontalalignment='right' if x < 0 else 'left',
              verticalalignment='top' if y < 0 else 'bottom',
              transform=ax.transData,
              offset_points=(5, 5))  # Fine-tune offset
-   
+
    - For specific geometric shapes:
      * Triangles: 
        - Right triangles: Right angle label MUST match description
@@ -310,7 +310,7 @@ Requirements:
      * Polygons:
        - Regular: Maintain symmetric label positions
        - Irregular: Match label positions to vertex properties
-   
+
    - Verify geometric properties:
      * Check angle types match labels (right, acute, obtuse)
      * Verify parallel/perpendicular sides have correct labels
@@ -355,15 +355,15 @@ Requirements:
 
 Generate matplotlib code that reproduces ONLY the graph with perfect accuracy.
 Focus on EXACT numerical values and precise positioning of graph elements ONLY.'''
-            
+
             code_response = model.generate_content(code_prompt)
             self.current_description = f"Graph Analysis:\n{graph_analysis}\n\nSuggested Matplotlib Code:\n{code_response.text}"
-            
+
             return {
                 "description": self.current_description,
                 "question_info": question_info
             }
-            
+
         except Exception as e:
             print(f"Error processing image: {str(e)}")
             return None
@@ -377,15 +377,15 @@ def generate_graph():
         description = data.get('description', '')
         if not description:
             return jsonify({'error': 'No description provided'}), 400
-        
+
         buf = graph_generator.generate_graph_from_description(description)
         if buf is None:
             return jsonify({'error': 'Failed to generate graph'}), 500
-        
+
         # Convert plot to base64
         img_str = base64.b64encode(buf.getvalue()).decode()
         return jsonify({'image': img_str})
-        
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -394,18 +394,18 @@ def process_image():
     try:
         if 'image' not in request.files:
             return jsonify({'error': 'No image provided'}), 400
-            
+
         image_file = request.files['image']
         image = Image.open(image_file)
-        
+
         # Convert to format suitable for Gemini's API
         buf = io.BytesIO()
         image.save(buf, format='PNG')
         image_data = buf.getvalue()
-        
+
         result = graph_generator.process_uploaded_image(image_data)
         return jsonify(result)
-        
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

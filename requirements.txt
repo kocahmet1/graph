@@ -1,4 +1,4 @@
-anthropic==0.5.0
+anthropic-sdk==0.2.8
 matplotlib==3.7.1
 keyring
 pillow==9.5.0

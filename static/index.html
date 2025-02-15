@@ -1,40 +1,9 @@
-<<<<<<< HEAD
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Graph Generator</title>
-    <style>
-        body { max-width: 800px; margin: 0 auto; padding: 20px; }
-        textarea { width: 100%; height: 100px; }
-        img { max-width: 100%; }
-    </style>
-</head>
-<body>
-    <h1>Graph Generator</h1>
-    <textarea id="description" placeholder="Enter graph description..."></textarea>
-    <button onclick="generateGraph()">Generate Graph</button>
-    <div id="result"></div>
-
-    <script>
-        async function generateGraph() {
-            const description = document.getElementById('description').value;
-            const response = await fetch('/api/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ description })
-            });
-            const data = await response.json();
-            if (data.image) {
-                document.getElementById('result').innerHTML = 
-                    `<img src="data:image/png;base64,${data.image}">`;
-=======
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Grafik Oluşturucu</title>
+    <title>AI Graph Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .loading {
@@ -61,202 +30,51 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .watermark {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transform: rotate(-30deg);
-            pointer-events: none;
-        }
-        .watermark-veritas {
-            font-size: 90px;
-            font-weight: bold;
-            color: rgba(0,0,0,0.15);
-            font-family: "Times New Roman", serif;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-            line-height: 1;
-        }
-        .watermark-academy {
-            font-size: 50px;
-            font-weight: bold;
-            color: rgba(0,0,0,0.1);
-            font-family: "Times New Roman", serif;
-            letter-spacing: 8px;
-            text-transform: uppercase;
-            line-height: 1;
-        }
-        body {
-            background: 
-                linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.85) 100%),
-                repeating-linear-gradient(45deg, 
-                    rgba(0,0,0,0.08) 0px, 
-                    rgba(0,0,0,0.08) 2px,
-                    transparent 2px, 
-                    transparent 10px
-                );
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-        }
-        .watermark-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 20px;
-            padding: 20px;
-            z-index: -1;
-        }
-        .watermark-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-        }
-        .content-container {
-            position: relative;
-            z-index: 1;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 0.5rem;
-            box-shadow: 
-                0 4px 6px rgba(0, 0, 0, 0.1),
-                0 1px 3px rgba(0, 0, 0, 0.08);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 
-                0 6px 8px rgba(0, 0, 0, 0.1),
-                0 3px 6px rgba(0, 0, 0, 0.08);
-        }
-        .page-title {
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            position: relative;
-            color: #333;
-        }
-        .page-title::after {
-            content: "";
-            position: absolute;
-            bottom: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 150px;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.2), transparent);
-        }
     </style>
 </head>
-<body class="min-h-screen">
-    <div class="watermark-container">
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-    </div>
-    <div class="content-container container mx-auto px-4 py-8">
-        <h1 class="page-title text-3xl font-bold text-center mb-8">AI Grafik Oluşturucu</h1>
-        
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">AI Graph Generator</h1>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Left Column -->
             <div class="space-y-6">
-                <div class="card p-6">
-                    <h2 class="text-xl font-semibold mb-4">Resim Yükle</h2>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Upload Image</h2>
                     <input type="file" id="imageUpload" accept="image/*" class="w-full mb-4">
                     <button onclick="uploadImage()" class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
-                        Yükle ve Analiz Et
+                        Upload and Analyze
                     </button>
                 </div>
 
-                <div id="questionInfo" class="card p-6 hidden">
-                    <h2 class="text-xl font-semibold mb-4">Soru Bilgisi</h2>
+                <div id="questionInfo" class="bg-white p-6 rounded-lg shadow hidden">
+                    <h2 class="text-xl font-semibold mb-4">Question Info</h2>
                     <div class="space-y-4">
                         <div>
-                            <h3 class="font-medium">Soru:</h3>
+                            <h3 class="font-medium">Question:</h3>
                             <p id="questionText" class="mt-1"></p>
                         </div>
                         <div>
-                            <h3 class="font-medium">Cevap Seçenekleri:</h3>
+                            <h3 class="font-medium">Answer Choices:</h3>
                             <ul id="answerChoices" class="list-disc pl-5 mt-1"></ul>
                         </div>
                     </div>
                 </div>
 
-                <div class="card p-6">
-                    <h2 class="text-xl font-semibold mb-4">Grafik Açıklaması</h2>
-                    <textarea id="description" rows="10" class="w-full p-2 border rounded" placeholder="Grafik açıklamasını buraya yazın..."></textarea>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">Graph Description</h2>
+                    <textarea id="description" rows="10" class="w-full p-2 border rounded" placeholder="Enter graph description here..."></textarea>
                     <button onclick="generateGraph()" class="w-full mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">
-                        Grafik Oluştur
+                        Generate Graph
                     </button>
                 </div>
             </div>
 
             <!-- Right Column -->
-            <div class="card p-6">
-                <h2 class="text-xl font-semibold mb-4">Oluşturulan Grafik</h2>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4">Generated Graph</h2>
                 <div id="graphContainer" class="w-full flex justify-center items-center min-h-[300px]">
-                    <p class="text-gray-500">Grafik burada görüntülenecek...</p>
+                    <p class="text-gray-500">Graph will appear here...</p>
                 </div>
             </div>
         </div>
@@ -278,14 +96,14 @@
         async function uploadImage() {
             const fileInput = document.getElementById('imageUpload');
             const file = fileInput.files[0];
-            
+
             if (!file) {
-                alert('Lütfen bir resim seçin');
+                alert('Please select an image');
                 return;
             }
 
             showLoading();
-            
+
             const formData = new FormData();
             formData.append('image', file);
 
@@ -296,22 +114,20 @@
                 });
 
                 const data = await response.json();
-                
+
                 if (data.error) {
                     throw new Error(data.error);
                 }
 
                 document.getElementById('description').value = data.description;
 
-                // Update question information
-                const questionInfo = data.question_info;
-                if (questionInfo && (questionInfo.question || questionInfo.answers.length > 0)) {
+                if (data.question_info && (data.question_info.question || data.question_info.answers.length > 0)) {
                     document.getElementById('questionInfo').classList.remove('hidden');
-                    document.getElementById('questionText').textContent = questionInfo.question;
-                    
+                    document.getElementById('questionText').textContent = data.question_info.question;
+
                     const answerList = document.getElementById('answerChoices');
                     answerList.innerHTML = '';
-                    questionInfo.answers.forEach(answer => {
+                    data.question_info.answers.forEach(answer => {
                         const li = document.createElement('li');
                         li.textContent = answer;
                         answerList.appendChild(li);
@@ -321,7 +137,7 @@
                 }
 
             } catch (error) {
-                alert('Hata: ' + error.message);
+                alert('Error: ' + error.message);
             } finally {
                 hideLoading();
             }
@@ -329,14 +145,14 @@
 
         async function generateGraph() {
             const description = document.getElementById('description').value;
-            
+
             if (!description) {
-                alert('Lütfen bir grafik açıklaması girin');
+                alert('Please enter a graph description');
                 return;
             }
 
             showLoading();
-            
+
             try {
                 const response = await fetch('/api/generate', {
                     method: 'POST',
@@ -347,7 +163,7 @@
                 });
 
                 const data = await response.json();
-                
+
                 if (data.error) {
                     throw new Error(data.error);
                 }
@@ -356,10 +172,9 @@
                 graphContainer.innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Generated Graph" class="max-w-full h-auto">`;
 
             } catch (error) {
-                alert('Hata: ' + error.message);
+                alert('Error: ' + error.message);
             } finally {
                 hideLoading();
->>>>>>> debb9129ee9dadc4d884c2cf40cdb926dc7cfd92
             }
         }
     </script>

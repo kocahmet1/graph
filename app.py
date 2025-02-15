@@ -227,7 +227,7 @@ SECTION 2 - Question Information:
 
 Please format your response with clear section headers."""
             
-            # Convert PIL Image to the format expected by Claude
+            # Convert PIL Image to the format expected by OpenAI
             response = openai.Image.create(
                 image=image_data,
                 prompt=prompt,
@@ -422,7 +422,7 @@ def process_image():
         image_file = request.files['image']
         image = Image.open(image_file)
         
-        # Convert to format suitable for Claude's API
+        # Convert to format suitable for OpenAI's API
         buf = io.BytesIO()
         image.save(buf, format='PNG')
         image_data = buf.getvalue()

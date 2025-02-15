@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import matplotlib.pyplot as plt
-import google.generativeai as genai
+import openai
 import io
 import base64
 import json
@@ -25,10 +25,10 @@ class WebGraphGenerator:
             # Try to load API key from config
             with open("config.json") as f:
                 config = json.load(f)
-                api_key = config.get("GOOGLE_API_KEY")
+                api_key = config.get("OPENAI_API_KEY")
                 if api_key:
                     print(f"Configuring API with key: {api_key[:5]}...")  # Print first 5 chars for verification
-                    genai.configure(api_key=api_key)
+                    openai.api_key = api_key
                     return True
                 else:
                     print("No API key found in config.json")
@@ -42,7 +42,6 @@ class WebGraphGenerator:
 
     def generate_graph_from_description(self, description):
         try:
-            model = genai.GenerativeModel('gemini-2.0-flash')
             prompt = f'''Generate precise matplotlib code that will EXACTLY match the graph description with perfect accuracy:
 "{description}"
 
@@ -159,8 +158,19 @@ Requirements:
 Generate matplotlib code that reproduces ONLY the graph with perfect accuracy.
 Focus on EXACT numerical values and precise positioning of graph elements ONLY.'''
             
-            response = model.generate_content(prompt)
-            code = response.text
+            message = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                max_tokens=1024,
+                temperature=0.2,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+            
+            code = message.choices[0].message.content
             
             # Extract code from markdown if present
             if "```python" in code:
@@ -190,7 +200,6 @@ Focus on EXACT numerical values and precise positioning of graph elements ONLY.'
             # Convert bytes to PIL Image
             image = Image.open(io.BytesIO(image_data))
             
-            model = genai.GenerativeModel('gemini-2.0-flash')
             prompt = """Analyze this graph image and provide TWO separate sections:
 
 SECTION 1 - Graph Analysis (for recreation):
@@ -218,9 +227,14 @@ SECTION 2 - Question Information:
 
 Please format your response with clear section headers."""
             
-            # Convert PIL Image to the format expected by Gemini
-            response = model.generate_content([{"mime_type": "image/png", "data": image_data}, prompt])
-            full_response = response.text
+            # Convert PIL Image to the format expected by Claude
+            response = openai.Image.create(
+                image=image_data,
+                prompt=prompt,
+                n=1,
+                size="1024x1024"
+            )
+            full_response = response.data[0].b64
             
             # Split the response into graph analysis and question info
             sections = full_response.split("SECTION 2 - Question Information:")
@@ -356,8 +370,18 @@ Requirements:
 Generate matplotlib code that reproduces ONLY the graph with perfect accuracy.
 Focus on EXACT numerical values and precise positioning of graph elements ONLY.'''
             
-            code_response = model.generate_content(code_prompt)
-            self.current_description = f"Graph Analysis:\n{graph_analysis}\n\nSuggested Matplotlib Code:\n{code_response.text}"
+            code_response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                max_tokens=1024,
+                temperature=0.2,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": code_prompt
+                    }
+                ]
+            )
+            self.current_description = f"Graph Analysis:\n{graph_analysis}\n\nSuggested Matplotlib Code:\n{code_response.choices[0].message.content}"
             
             return {
                 "description": self.current_description,
@@ -398,7 +422,7 @@ def process_image():
         image_file = request.files['image']
         image = Image.open(image_file)
         
-        # Convert to format suitable for Google's API
+        # Convert to format suitable for Claude's API
         buf = io.BytesIO()
         image.save(buf, format='PNG')
         image_data = buf.getvalue()

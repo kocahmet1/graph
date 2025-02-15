@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import matplotlib.pyplot as plt
-import requests
+import google.generativeai as genai
 import io
 import base64
 import json
@@ -25,9 +25,10 @@ class WebGraphGenerator:
             # Try to load API key from config
             with open("config.json") as f:
                 config = json.load(f)
-                self.api_key = config.get("OPENAI_API_KEY")
-                if self.api_key:
-                    print(f"Loaded API key: {self.api_key[:5]}...")  # Print first 5 chars for verification
+                api_key = config.get("GOOGLE_API_KEY")
+                if api_key:
+                    print(f"Configuring API with key: {api_key[:5]}...")  # Print first 5 chars for verification
+                    genai.configure(api_key=api_key)
                     return True
                 else:
                     print("No API key found in config.json")
@@ -41,6 +42,7 @@ class WebGraphGenerator:
 
     def generate_graph_from_description(self, description):
         try:
+            model = genai.GenerativeModel('gemini-2.0-flash')
             prompt = f'''Generate precise matplotlib code that will EXACTLY match the graph description with perfect accuracy:
 "{description}"
 
@@ -157,32 +159,8 @@ Requirements:
 Generate matplotlib code that reproduces ONLY the graph with perfect accuracy.
 Focus on EXACT numerical values and precise positioning of graph elements ONLY.'''
             
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            
-            data = {
-                "model": "gpt-3.5-turbo",
-                "messages": [{
-                    "role": "user",
-                    "content": prompt
-                }],
-                "temperature": 0.2
-            }
-            
-            response = requests.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code != 200:
-                print(f"API Error: {response.text}")
-                return None
-                
-            response_data = response.json()
-            code = response_data['choices'][0]['message']['content']
+            response = model.generate_content(prompt)
+            code = response.text
             
             # Extract code from markdown if present
             if "```python" in code:
@@ -212,6 +190,7 @@ Focus on EXACT numerical values and precise positioning of graph elements ONLY.'
             # Convert bytes to PIL Image
             image = Image.open(io.BytesIO(image_data))
             
+            model = genai.GenerativeModel('gemini-2.0-flash')
             prompt = """Analyze this graph image and provide TWO separate sections:
 
 SECTION 1 - Graph Analysis (for recreation):
@@ -239,33 +218,9 @@ SECTION 2 - Question Information:
 
 Please format your response with clear section headers."""
             
-            # Convert PIL Image to the format expected by OpenAI
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            
-            data = {
-                "model": "gpt-3.5-turbo",
-                "messages": [{
-                    "role": "user",
-                    "content": prompt
-                }],
-                "temperature": 0.2
-            }
-            
-            response = requests.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code != 200:
-                print(f"API Error: {response.text}")
-                return None
-                
-            response_data = response.json()
-            full_response = response_data['choices'][0]['message']['content']
+            # Convert PIL Image to the format expected by Gemini
+            response = model.generate_content([{"mime_type": "image/png", "data": image_data}, prompt])
+            full_response = response.text
             
             # Split the response into graph analysis and question info
             sections = full_response.split("SECTION 2 - Question Information:")
@@ -401,34 +356,8 @@ Requirements:
 Generate matplotlib code that reproduces ONLY the graph with perfect accuracy.
 Focus on EXACT numerical values and precise positioning of graph elements ONLY.'''
             
-            headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-            
-            data = {
-                "model": "gpt-3.5-turbo",
-                "messages": [{
-                    "role": "user",
-                    "content": code_prompt
-                }],
-                "temperature": 0.2
-            }
-            
-            response = requests.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers=headers,
-                json=data
-            )
-            
-            if response.status_code != 200:
-                print(f"API Error: {response.text}")
-                return None
-                
-            response_data = response.json()
-            code = response_data['choices'][0]['message']['content']
-            
-            self.current_description = f"Graph Analysis:\n{graph_analysis}\n\nSuggested Matplotlib Code:\n{code}"
+            code_response = model.generate_content(code_prompt)
+            self.current_description = f"Graph Analysis:\n{graph_analysis}\n\nSuggested Matplotlib Code:\n{code_response.text}"
             
             return {
                 "description": self.current_description,
@@ -437,7 +366,7 @@ Focus on EXACT numerical values and precise positioning of graph elements ONLY.'
             
         except Exception as e:
             print(f"Error processing image: {str(e)}")
-            return str(e)
+            return None
 
 graph_generator = WebGraphGenerator()
 
@@ -469,7 +398,7 @@ def process_image():
         image_file = request.files['image']
         image = Image.open(image_file)
         
-        # Convert to format suitable for OpenAI's API
+        # Convert to format suitable for Gemini's API
         buf = io.BytesIO()
         image.save(buf, format='PNG')
         image_data = buf.getvalue()

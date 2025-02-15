@@ -13,7 +13,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 class WebGraphGenerator:
     def __init__(self):

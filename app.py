@@ -411,6 +411,47 @@ def process_image():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/correct', methods=['POST'])
+def correct_graph():
+    try:
+        data = request.json
+        correction = data.get('correction', '')
+        current_description = data.get('current_description', '')
+        
+        if not correction or not current_description:
+            return jsonify({'error': 'Missing correction or current description'}), 400
+
+        # Create enhanced prompt that maintains the original graph while applying corrections
+        enhanced_prompt = f'''Modify this graph description to incorporate the following correction, while maintaining all other aspects:
+
+Original description:
+{current_description}
+
+Requested correction:
+{correction}
+
+Generate a revised description that precisely incorporates this correction while keeping all other elements the same.'''
+
+        # Generate new description
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        response = model.generate_content(enhanced_prompt)
+        new_description = response.text.strip()
+
+        # Generate new graph with corrected description
+        buf = graph_generator.generate_graph_from_description(new_description)
+        if buf is None:
+            return jsonify({'error': 'Failed to generate corrected graph'}), 500
+
+        # Convert plot to base64
+        img_str = base64.b64encode(buf.getvalue()).decode()
+        return jsonify({
+            'image': img_str,
+            'description': new_description
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')

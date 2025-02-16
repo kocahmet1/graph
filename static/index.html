@@ -187,8 +187,14 @@
             <!-- Right Column -->
             <div class="glass-card p-6">
                 <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Generated Graph</h2>
-                <div id="graphContainer" class="w-full flex justify-center items-center min-h-[400px] rounded-lg border border-indigo-500/10 bg-gradient-to-br from-indigo-500/5 to-purple-500/5">
+                <div id="graphContainer" class="w-full flex flex-col justify-center items-center min-h-[400px] rounded-lg border border-indigo-500/10 bg-gradient-to-br from-indigo-500/5 to-purple-500/5">
                     <p class="text-indigo-200">Generated graph will appear here...</p>
+                </div>
+                <div id="correctionUI" class="mt-4 hidden">
+                    <textarea id="correctionPrompt" class="textarea-modern w-full" rows="2" placeholder="Enter corrections like 'increase the slope' or 'make angle at C 90 degrees'..."></textarea>
+                    <button onclick="applyCorrection()" class="btn-primary w-full mt-2">
+                        Apply Correction
+                    </button>
                 </div>
             </div>
         </div>
@@ -341,6 +347,47 @@
                     throw new Error(data.error);
                 }
 
+                const graphContainer = document.getElementById('graphContainer');
+                graphContainer.innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Generated Graph" class="max-w-full h-auto rounded-lg">`;
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+            // Show correction UI after graph is generated
+            document.getElementById('correctionUI').classList.remove('hidden');
+        }
+
+        async function applyCorrection() {
+            const correctionPrompt = document.getElementById('correctionPrompt').value;
+            if (!correctionPrompt.trim()) {
+                alert('Please enter a correction prompt');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch('/api/correct', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        correction: correctionPrompt,
+                        current_description: document.getElementById('description').value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Update description and graph
+                document.getElementById('description').value = data.description;
                 const graphContainer = document.getElementById('graphContainer');
                 graphContainer.innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Generated Graph" class="max-w-full h-auto rounded-lg">`;
 

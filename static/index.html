@@ -1,238 +1,155 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Graph Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .loading {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f6f7ff 0%, #ffffff 100%);
+            min-height: 100vh;
         }
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
+            border-top: 3px solid #4F46E5;
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .watermark {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transform: rotate(-30deg);
-            pointer-events: none;
-        }
-        .watermark-veritas {
-            font-size: 90px;
-            font-weight: bold;
-            color: rgba(0,0,0,0.15);
-            font-family: "Times New Roman", serif;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-            line-height: 1;
-        }
-        .watermark-academy {
-            font-size: 50px;
-            font-weight: bold;
-            color: rgba(0,0,0,0.1);
-            font-family: "Times New Roman", serif;
-            letter-spacing: 8px;
-            text-transform: uppercase;
-            line-height: 1;
-        }
-        body {
-            background: 
-                linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.85) 100%),
-                repeating-linear-gradient(45deg, 
-                    rgba(0,0,0,0.08) 0px, 
-                    rgba(0,0,0,0.08) 2px,
-                    transparent 2px, 
-                    transparent 10px
-                );
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-        }
-        .watermark-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 20px;
-            padding: 20px;
-            z-index: -1;
-        }
-        .watermark-item {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-        }
-        .content-container {
-            position: relative;
-            z-index: 1;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.95);
+
+        .textarea-modern {
+            border: 1px solid #E5E7EB;
             border-radius: 0.5rem;
-            box-shadow: 
-                0 4px 6px rgba(0, 0, 0, 0.1),
-                0 1px 3px rgba(0, 0, 0, 0.08);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            padding: 1rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            resize: vertical;
         }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 
-                0 6px 8px rgba(0, 0, 0, 0.1),
-                0 3px 6px rgba(0, 0, 0, 0.08);
+
+        .textarea-modern:focus {
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            outline: none;
         }
-        .page-title {
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            position: relative;
-            color: #333;
+
+        .file-upload {
+            border: 2px dashed #E5E7EB;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-        .page-title::after {
-            content: "";
-            position: absolute;
-            bottom: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 150px;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.2), transparent);
+
+        .file-upload:hover {
+            border-color: #4F46E5;
+            background: rgba(79, 70, 229, 0.05);
         }
     </style>
 </head>
-<body class="min-h-screen">
-    <div class="watermark-container">
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-        <div class="watermark-item">
-            <div class="watermark">
-                <div class="watermark-veritas">VERITAS</div>
-                <div class="watermark-academy">ACADEMY</div>
-            </div>
-        </div>
-    </div>
-    <div class="content-container container mx-auto px-4 py-8">
-        <h1 class="page-title text-3xl font-bold text-center mb-8">AI Graph Generator</h1>
+<body class="p-6">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-4xl font-bold text-center mb-12 text-gray-900">AI Graph Generator</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Left Column -->
             <div class="space-y-6">
-                <div class="card p-6">
-                    <h2 class="text-xl font-semibold mb-4">Upload Image</h2>
-                    <input type="file" id="imageUpload" accept="image/*" class="w-full mb-4">
-                    <button onclick="uploadImage()" class="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
-                        Upload and Analyze
+                <!-- Upload Section -->
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-900">Upload Image</h2>
+                    <label class="file-upload block">
+                        <input type="file" id="imageUpload" accept="image/*" class="hidden">
+                        <div class="text-gray-500">
+                            <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <p class="text-sm">Drag and drop your image here, or click to select</p>
+                        </div>
+                    </label>
+                    <button onclick="uploadImage()" class="btn-primary w-full mt-4">
+                        Analyze Image
                     </button>
                 </div>
 
-                <div id="questionInfo" class="card p-6 hidden">
-                    <h2 class="text-xl font-semibold mb-4">Question Info</h2>
+                <!-- Question Info -->
+                <div id="questionInfo" class="glass-card p-6 hidden">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-900">Question Information</h2>
                     <div class="space-y-4">
                         <div>
-                            <h3 class="font-medium">Question:</h3>
-                            <p id="questionText" class="mt-1"></p>
+                            <h3 class="font-medium text-gray-700">Question:</h3>
+                            <p id="questionText" class="mt-1 text-gray-600"></p>
                         </div>
                         <div>
-                            <h3 class="font-medium">Answer Choices:</h3>
-                            <ul id="answerChoices" class="list-disc pl-5 mt-1"></ul>
+                            <h3 class="font-medium text-gray-700">Answer Choices:</h3>
+                            <ul id="answerChoices" class="list-disc pl-5 mt-1 text-gray-600"></ul>
                         </div>
                     </div>
                 </div>
 
-                <div class="card p-6">
-                    <h2 class="text-xl font-semibold mb-4">Graph Description</h2>
-                    <textarea id="description" rows="10" class="w-full p-2 border rounded" placeholder="Enter graph description here..."></textarea>
-                    <button onclick="generateGraph()" class="w-full mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">
+                <!-- Description Section -->
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-900">Graph Description</h2>
+                    <textarea id="description" class="textarea-modern w-full" rows="10" placeholder="Enter graph description here..."></textarea>
+                    <button onclick="generateGraph()" class="btn-primary w-full mt-4">
                         Generate Graph
                     </button>
                 </div>
             </div>
 
             <!-- Right Column -->
-            <div class="card p-6">
-                <h2 class="text-xl font-semibold mb-4">Generated Graph</h2>
-                <div id="graphContainer" class="w-full flex justify-center items-center min-h-[300px]">
-                    <p class="text-gray-500">Graph will appear here...</p>
+            <div class="glass-card p-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-900">Generated Graph</h2>
+                <div id="graphContainer" class="w-full flex justify-center items-center min-h-[400px] bg-gray-50 rounded-lg">
+                    <p class="text-gray-400">Generated graph will appear here...</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="loading" class="loading">
-        <div class="loading-spinner"></div>
+    <!-- Loading Overlay -->
+    <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="glass-card p-8 flex flex-col items-center">
+            <div class="loader mb-4"></div>
+            <p class="text-gray-700">Processing...</p>
+        </div>
     </div>
 
     <script>
@@ -242,6 +159,44 @@
 
         function hideLoading() {
             document.getElementById('loading').style.display = 'none';
+        }
+
+        // Drag and drop functionality
+        const fileUpload = document.querySelector('.file-upload');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            fileUpload.classList.add('border-indigo-500');
+            fileUpload.classList.add('bg-indigo-50');
+        }
+
+        function unhighlight(e) {
+            fileUpload.classList.remove('border-indigo-500');
+            fileUpload.classList.remove('bg-indigo-50');
+        }
+
+        fileUpload.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            document.getElementById('imageUpload').files = files;
         }
 
         async function uploadImage() {
@@ -320,7 +275,7 @@
                 }
 
                 const graphContainer = document.getElementById('graphContainer');
-                graphContainer.innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Generated Graph" class="max-w-full h-auto">`;
+                graphContainer.innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Generated Graph" class="max-w-full h-auto rounded-lg">`;
 
             } catch (error) {
                 alert('Error: ' + error.message);

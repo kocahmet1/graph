@@ -1,6 +1,6 @@
 
 google-generativeai
-matplotlib==3.6.0
+matplotlib==3.5.3
 keyring
 pillow==8.4.0
 numpy

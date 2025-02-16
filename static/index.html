@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,49 +6,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Graph Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f6f7ff 0%, #ffffff 100%);
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
+            color: #e2e8f0;
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border-radius: 1rem;
-            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border-radius: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .glass-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
             color: white;
             padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
+            border-radius: 1rem;
             font-weight: 500;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
         }
 
         .loader {
-            border: 3px solid rgba(255, 255, 255, 0.3);
+            border: 3px solid rgba(255, 255, 255, 0.1);
             border-radius: 50%;
-            border-top: 3px solid #4F46E5;
+            border-top: 3px solid #6366f1;
             width: 40px;
             height: 40px;
-            animation: spin 1s linear infinite;
+            animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
 
         @keyframes spin {
@@ -56,48 +62,89 @@
         }
 
         .textarea-modern {
-            border: 1px solid #E5E7EB;
-            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
             padding: 1rem;
             font-size: 0.875rem;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             resize: vertical;
+            color: #e2e8f0;
         }
 
         .textarea-modern:focus {
-            border-color: #4F46E5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
             outline: none;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .file-upload {
-            border: 2px dashed #E5E7EB;
-            border-radius: 0.5rem;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
             padding: 2rem;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .file-upload:hover {
-            border-color: #4F46E5;
-            background: rgba(79, 70, 229, 0.05);
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .glow {
+            position: fixed;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%);
+            pointer-events: none;
+            mix-blend-mode: screen;
+            animation: glow-move 10s infinite alternate;
+            filter: blur(100px);
+        }
+
+        @keyframes glow-move {
+            0% { transform: translate(-25%, -25%) scale(1); }
+            100% { transform: translate(25%, 25%) scale(1.5); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
     </style>
 </head>
 <body class="p-6">
+    <div class="glow top-0 left-0"></div>
+    <div class="glow bottom-0 right-0"></div>
+
     <div class="max-w-6xl mx-auto">
-        <h1 class="text-4xl font-bold text-center mb-12 text-gray-900">AI Graph Generator</h1>
+        <h1 class="text-5xl font-bold text-center mb-12 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">AI Graph Generator</h1>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Left Column -->
             <div class="space-y-6">
                 <!-- Upload Section -->
                 <div class="glass-card p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-900">Upload Image</h2>
+                    <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Upload Image</h2>
                     <label class="file-upload block">
                         <input type="file" id="imageUpload" accept="image/*" class="hidden">
-                        <div class="text-gray-500">
+                        <div class="text-indigo-200">
                             <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                             </svg>
@@ -111,22 +158,22 @@
 
                 <!-- Question Info -->
                 <div id="questionInfo" class="glass-card p-6 hidden">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-900">Question Information</h2>
+                    <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Question Information</h2>
                     <div class="space-y-4">
                         <div>
-                            <h3 class="font-medium text-gray-700">Question:</h3>
-                            <p id="questionText" class="mt-1 text-gray-600"></p>
+                            <h3 class="font-medium text-indigo-200">Question:</h3>
+                            <p id="questionText" class="mt-1 text-gray-300"></p>
                         </div>
                         <div>
-                            <h3 class="font-medium text-gray-700">Answer Choices:</h3>
-                            <ul id="answerChoices" class="list-disc pl-5 mt-1 text-gray-600"></ul>
+                            <h3 class="font-medium text-indigo-200">Answer Choices:</h3>
+                            <ul id="answerChoices" class="list-disc pl-5 mt-1 text-gray-300"></ul>
                         </div>
                     </div>
                 </div>
 
                 <!-- Description Section -->
                 <div class="glass-card p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-900">Graph Description</h2>
+                    <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Graph Description</h2>
                     <textarea id="description" class="textarea-modern w-full" rows="10" placeholder="Enter graph description here..."></textarea>
                     <button onclick="generateGraph()" class="btn-primary w-full mt-4">
                         Generate Graph
@@ -136,19 +183,19 @@
 
             <!-- Right Column -->
             <div class="glass-card p-6">
-                <h2 class="text-xl font-semibold mb-4 text-gray-900">Generated Graph</h2>
-                <div id="graphContainer" class="w-full flex justify-center items-center min-h-[400px] bg-gray-50 rounded-lg">
-                    <p class="text-gray-400">Generated graph will appear here...</p>
+                <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Generated Graph</h2>
+                <div id="graphContainer" class="w-full flex justify-center items-center min-h-[400px] rounded-lg border border-indigo-500/10 bg-gradient-to-br from-indigo-500/5 to-purple-500/5">
+                    <p class="text-indigo-200">Generated graph will appear here...</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div id="loading" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
         <div class="glass-card p-8 flex flex-col items-center">
             <div class="loader mb-4"></div>
-            <p class="text-gray-700">Processing...</p>
+            <p class="text-indigo-200">Processing...</p>
         </div>
     </div>
 
@@ -161,7 +208,6 @@
             document.getElementById('loading').style.display = 'none';
         }
 
-        // Drag and drop functionality
         const fileUpload = document.querySelector('.file-upload');
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -182,13 +228,13 @@
         });
 
         function highlight(e) {
-            fileUpload.classList.add('border-indigo-500');
-            fileUpload.classList.add('bg-indigo-50');
+            fileUpload.classList.add('border-indigo-400');
+            fileUpload.classList.add('bg-indigo-500/10');
         }
 
         function unhighlight(e) {
-            fileUpload.classList.remove('border-indigo-500');
-            fileUpload.classList.remove('bg-indigo-50');
+            fileUpload.classList.remove('border-indigo-400');
+            fileUpload.classList.remove('bg-indigo-500/10');
         }
 
         fileUpload.addEventListener('drop', handleDrop, false);

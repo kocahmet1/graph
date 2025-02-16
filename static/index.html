@@ -189,7 +189,15 @@
                 <div id="graphContainer" class="w-full flex flex-col justify-center items-center min-h-[400px] rounded-lg border border-indigo-500/10 bg-gradient-to-br from-indigo-500/5 to-purple-500/5">
                     <p class="text-indigo-200">Oluşturulan grafik burada görünecek...</p>
                 </div>
-                <div id="correctionUI" class="mt-4 hidden">
+                <div id="correctionUI" class="mt-4 hidden relative group">
+                    <div class="absolute -top-12 left-0 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                        <div class="bg-indigo-600/90 text-white p-3 rounded-lg text-sm backdrop-blur-sm">
+                            💡 Grafiği düzeltmek için doğal dil kullanabilirsiniz. Örneğin: "eğimi artır" veya "C açısını 90 derece yap"
+                            <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+                                <div class="border-8 border-transparent border-t-indigo-600/90"></div>
+                            </div>
+                        </div>
+                    </div>
                     <textarea id="correctionPrompt" class="textarea-modern w-full" rows="2" placeholder="Düzeltmeleri girin, örneğin: 'eğimi artır' veya 'C açısını 90 derece yap'..."></textarea>
                     <button onclick="applyCorrection()" class="btn-primary w-full mt-2">
                         Düzeltmeyi Uygula

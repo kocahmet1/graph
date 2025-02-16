@@ -405,7 +405,18 @@ def process_image():
         image.save(buf, format='PNG')
         image_data = buf.getvalue()
 
+        # Process image and get description
         result = graph_generator.process_uploaded_image(image_data)
+        
+        # Generate graph from the description
+        if result and 'description' in result:
+            graph_description = result['description']
+            graph_buf = graph_generator.generate_graph_from_description(graph_description)
+            if graph_buf:
+                # Convert plot to base64
+                graph_img_str = base64.b64encode(graph_buf.getvalue()).decode()
+                result['graph'] = graph_img_str
+                
         return jsonify(result)
 
     except Exception as e:

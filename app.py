@@ -386,7 +386,36 @@ def generate_graph():
 
         # Convert plot to base64
         img_str = base64.b64encode(buf.getvalue()).decode()
-        return jsonify({'image': img_str})
+        return jsonify({'image': img_str, 'original_description': description})
+
+@app.route('/api/correct', methods=['POST'])
+def correct_graph():
+    try:
+        if not graph_generator.setup_api():
+            return jsonify({'error': 'API key not configured'}), 401
+            
+        data = request.json
+        original_description = data.get('original_description', '')
+        correction = data.get('correction', '')
+        
+        if not correction:
+            return jsonify({'error': 'No correction provided'}), 400
+
+        # Combine original description with correction
+        combined_prompt = f"""Based on this original graph description:
+{original_description}
+
+Apply this correction:
+{correction}
+
+Generate an updated graph that incorporates these changes."""
+
+        buf = graph_generator.generate_graph_from_description(combined_prompt)
+        if buf is None:
+            return jsonify({'error': 'Failed to correct graph'}), 500
+
+        img_str = base64.b64encode(buf.getvalue()).decode()
+        return jsonify({'image': img_str, 'original_description': combined_prompt})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -387,8 +387,6 @@ def generate_graph():
         # Convert plot to base64
         img_str = base64.b64encode(buf.getvalue()).decode()
         return jsonify({'image': img_str, 'original_description': description})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/correct', methods=['POST'])
 def correct_graph():

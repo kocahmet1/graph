@@ -108,6 +108,15 @@
             100% { transform: translate(25%, 25%) scale(1.5); }
         }
 
+        @keyframes tooltip-fade {
+            0%, 100% { opacity: 0; }
+            20%, 80% { opacity: 1; }
+        }
+
+        .animate-tooltip {
+            animation: tooltip-fade 5s ease-in-out;
+        }
+
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -189,8 +198,8 @@
                 <div id="graphContainer" class="w-full flex flex-col justify-center items-center min-h-[400px] rounded-lg border border-indigo-500/10 bg-gradient-to-br from-indigo-500/5 to-purple-500/5">
                     <p class="text-indigo-200">Oluşturulan grafik burada görünecek...</p>
                 </div>
-                <div id="correctionUI" class="mt-4 hidden relative group">
-                    <div class="absolute -top-12 left-0 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                <div id="correctionUI" class="mt-4 hidden relative">
+                    <div class="absolute -top-12 left-0 w-full opacity-0 pointer-events-none animate-tooltip">
                         <div class="bg-indigo-600/90 text-white p-3 rounded-lg text-sm backdrop-blur-sm">
                             💡 Grafiği düzeltmek için doğal dil kullanabilirsiniz. Örneğin: "eğimi artır" veya "C açısını 90 derece yap"
                             <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">

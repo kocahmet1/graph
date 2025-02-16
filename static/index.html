@@ -1,80 +1,353 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Graph Generator</title>
+    <title>AI Graph Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border-radius: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 1rem;
+            font-weight: 500;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+        }
+
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #6366f1;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .textarea-modern {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1rem;
+            font-size: 0.875rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            resize: vertical;
+            color: #e2e8f0;
+        }
+
+        .textarea-modern:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            outline: none;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .file-upload {
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .file-upload:hover {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .glow {
+            position: fixed;
+            width: 50%;
+            height: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%);
+            pointer-events: none;
+            mix-blend-mode: screen;
+            animation: glow-move 10s infinite alternate;
+            filter: blur(100px);
+        }
+
+        @keyframes glow-move {
+            0% { transform: translate(-25%, -25%) scale(1); }
+            100% { transform: translate(25%, 25%) scale(1.5); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-8">
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold text-center mb-8">Graph Generator</h1>
+<body class="p-6">
+    <div class="glow top-0 left-0"></div>
+    <div class="glow bottom-0 right-0"></div>
 
-        <div class="mb-6">
-            <label class="block mb-2">Describe the graph you want:</label>
-            <textarea id="description" class="w-full p-2 rounded bg-gray-800 text-white" rows="4"></textarea>
-            <button onclick="generateGraph()" class="mt-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700">Generate Graph</button>
-        </div>
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-5xl font-bold text-center mb-12 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">AI Graph Generator</h1>
 
-        <div id="graphSection" class="hidden">
-            <h2 class="text-xl font-bold text-purple-400 mb-4">Generated Graph</h2>
-            <img id="graphImage" class="w-full bg-white rounded shadow-lg mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column -->
+            <div class="space-y-6">
+                <!-- Upload Section -->
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Upload Image</h2>
+                    <label class="file-upload block">
+                        <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="previewImage(this)">
+                        <div id="uploadArea" class="text-indigo-200">
+                            <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <p class="text-sm">Drag and drop your image here, or click to select</p>
+                        </div>
+                        <div id="previewArea" class="hidden mt-4">
+                            <img id="preview" class="max-h-32 mx-auto rounded-lg">
+                        </div>
+                    </label>
+                    <button onclick="uploadImage()" class="btn-primary w-full mt-4">
+                        Analyze Image
+                    </button>
+                </div>
 
-            <div class="mt-6">
-                <label class="block mb-2">Enter corrections (e.g., "increase the slope" or "make angle C 90 degrees"):</label>
-                <textarea id="correction" class="w-full p-2 rounded bg-gray-800 text-white" rows="2"></textarea>
-                <button onclick="correctGraph()" class="mt-2 px-4 py-2 bg-green-600 rounded hover:bg-green-700">Apply Correction</button>
+                <!-- Question Info -->
+                <div id="questionInfo" class="glass-card p-6 hidden">
+                    <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Question Information</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="font-medium text-indigo-200">Question:</h3>
+                            <p id="questionText" class="mt-1 text-gray-300"></p>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-indigo-200">Answer Choices:</h3>
+                            <ul id="answerChoices" class="list-disc pl-5 mt-1 text-gray-300"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description Section -->
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Graph Description</h2>
+                    <textarea id="description" class="textarea-modern w-full" rows="10" placeholder="Enter graph description here..."></textarea>
+                    <button onclick="generateGraph()" class="btn-primary w-full mt-4">
+                        Generate Graph
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="glass-card p-6">
+                <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Generated Graph</h2>
+                <div id="graphContainer" class="w-full flex justify-center items-center min-h-[400px] rounded-lg border border-indigo-500/10 bg-gradient-to-br from-indigo-500/5 to-purple-500/5">
+                    <p class="text-indigo-200">Generated graph will appear here...</p>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Loading Overlay -->
+    <div id="loading" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="glass-card p-8 flex flex-col items-center">
+            <div class="loader mb-4"></div>
+            <p class="text-indigo-200">Processing...</p>
+        </div>
+    </div>
+
     <script>
-        let currentDescription = '';
+        function previewImage(input) {
+            const preview = document.getElementById('preview');
+            const uploadArea = document.getElementById('uploadArea');
+            const previewArea = document.getElementById('previewArea');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    uploadArea.classList.add('hidden');
+                    previewArea.classList.remove('hidden');
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        const fileUpload = document.querySelector('.file-upload');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            fileUpload.classList.add('border-indigo-400');
+            fileUpload.classList.add('bg-indigo-500/10');
+        }
+
+        function unhighlight(e) {
+            fileUpload.classList.remove('border-indigo-400');
+            fileUpload.classList.remove('bg-indigo-500/10');
+        }
+
+        fileUpload.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            document.getElementById('imageUpload').files = files;
+        }
+
+        async function uploadImage() {
+            const fileInput = document.getElementById('imageUpload');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select an image');
+                return;
+            }
+
+            showLoading();
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('/api/process-image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                document.getElementById('description').value = data.description;
+
+                if (data.question_info && (data.question_info.question || data.question_info.answers.length > 0)) {
+                    document.getElementById('questionInfo').classList.remove('hidden');
+                    document.getElementById('questionText').textContent = data.question_info.question;
+
+                    const answerList = document.getElementById('answerChoices');
+                    answerList.innerHTML = '';
+                    data.question_info.answers.forEach(answer => {
+                        const li = document.createElement('li');
+                        li.textContent = answer;
+                        answerList.appendChild(li);
+                    });
+                } else {
+                    document.getElementById('questionInfo').classList.add('hidden');
+                }
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
 
         async function generateGraph() {
             const description = document.getElementById('description').value;
-            if (!description) return;
+
+            if (!description) {
+                alert('Please enter a graph description');
+                return;
+            }
+
+            showLoading();
 
             try {
                 const response = await fetch('/api/generate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ description })
                 });
 
                 const data = await response.json();
-                if (data.error) throw new Error(data.error);
 
-                document.getElementById('graphImage').src = `data:image/png;base64,${data.image}`;
-                document.getElementById('graphSection').classList.remove('hidden');
-                currentDescription = data.original_description;
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                const graphContainer = document.getElementById('graphContainer');
+                graphContainer.innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Generated Graph" class="max-w-full h-auto rounded-lg">`;
+
             } catch (error) {
-                alert('Error generating graph: ' + error.message);
-            }
-        }
-
-        async function correctGraph() {
-            const correction = document.getElementById('correction').value;
-            if (!correction) return;
-
-            try {
-                const response = await fetch('/api/correct', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        original_description: currentDescription,
-                        correction
-                    })
-                });
-
-                const data = await response.json();
-                if (data.error) throw new Error(data.error);
-
-                document.getElementById('graphImage').src = `data:image/png;base64,${data.image}`;
-                currentDescription = data.original_description;
-                document.getElementById('correction').value = '';
-            } catch (error) {
-                alert('Error correcting graph: ' + error.message);
+                alert('Error: ' + error.message);
+            } finally {
+                hideLoading();
             }
         }
     </script>

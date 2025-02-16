@@ -316,6 +316,14 @@
 
                 // Automatically generate graph if description exists
                 if (data.description) {
+                    // Show loading animation
+                    const graphContainer = document.getElementById('graphContainer');
+                    graphContainer.innerHTML = `
+                        <div class="flex flex-col items-center">
+                            <div class="loader mb-4"></div>
+                            <p class="text-indigo-200">Grafik oluşturuluyor...</p>
+                        </div>
+                    `;
                     generateGraph();
                 }
 

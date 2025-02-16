@@ -314,6 +314,11 @@
                     document.getElementById('questionInfo').classList.add('hidden');
                 }
 
+                // Automatically generate graph if description exists
+                if (data.description) {
+                    generateGraph();
+                }
+
             } catch (error) {
                 alert('Hata: ' + error.message);
             } finally {

@@ -139,8 +139,29 @@
     </style>
 </head>
 <body class="p-6">
-    <div class="glow top-0 left-0"></div>
-    <div class="glow bottom-0 right-0"></div>
+    <div class="glow top-0 left-0">
+        <div class="floating-text">AI Graphics</div>
+    </div>
+    <div class="glow bottom-0 right-0">
+        <div class="floating-text">Veritas</div>
+    </div>
+
+    <style>
+        .floating-text {
+            position: absolute;
+            font-size: 8rem;
+            font-weight: bold;
+            color: rgba(99, 102, 241, 0.03);
+            white-space: nowrap;
+            pointer-events: none;
+            animation: float-text 12s infinite alternate;
+        }
+
+        @keyframes float-text {
+            0% { transform: translate(-40%, -40%) rotate(-10deg); }
+            100% { transform: translate(40%, 40%) rotate(10deg); }
+        }
+    </style>
 
     <div class="max-w-6xl mx-auto relative">
         <div class="absolute top-3 left-3">

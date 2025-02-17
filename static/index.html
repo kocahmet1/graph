@@ -93,22 +93,7 @@
             background: rgba(99, 102, 241, 0.1);
         }
 
-        .glow {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 85%);
-            pointer-events: none;
-            mix-blend-mode: screen;
-            animation: glow-move 8s infinite alternate;
-            filter: blur(60px);
-            z-index: 0;
-        }
-
-        @keyframes glow-move {
-            0% { transform: translate(-30%, -30%) scale(1.4); }
-            100% { transform: translate(30%, 30%) scale(2.0); }
-        }
+        
 
         @keyframes tooltip-fade {
             0%, 100% { opacity: 0; }
@@ -140,33 +125,7 @@
     </style>
 </head>
 <body class="p-6">
-    <div class="glow top-0 left-0">
-        <div class="floating-text">Veritas</div>
-    </div>
-    <div class="glow bottom-0 right-0">
-        <div class="floating-text">Academy</div>
-    </div>
-
-    <style>
-        .floating-text {
-            position: fixed;
-            font-size: 12rem;
-            font-weight: bold;
-            color: rgba(255, 0, 0, 0.3);
-            white-space: nowrap;
-            pointer-events: none;
-            animation: float-text 12s infinite alternate;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            z-index: 1;
-            text-shadow: 1px 1px 2px rgba(255, 0, 0, 0.2);
-        }
-
-        @keyframes float-text {
-            0% { transform: translate(-30%, -30%) rotate(-5deg); }
-            100% { transform: translate(30%, 30%) rotate(5deg); }
-        }
-    </style>
+    
 
     <div class="max-w-6xl mx-auto relative">
         <div class="absolute top-3 left-3">

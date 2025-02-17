@@ -159,13 +159,27 @@ Generate matplotlib code that reproduces ONLY the graph with perfect accuracy.
 Focus on EXACT numerical values and precise positioning of graph elements ONLY.'''
 
             response = model.generate_content(prompt)
-            code = response.text
-
-            # Extract code from markdown if present
-            if "```python" in code:
-                code = code.split("```python")[1].split("```")[0].strip()
-            elif "```" in code:
-                code = code.split("```")[1].split("```")[0].strip()
+            text = response.text.strip()
+            
+            # Try to extract code from markdown if present
+            if "```python" in text:
+                code = text.split("```python")[1].split("```")[0].strip()
+            elif "```" in text:
+                code = text.split("```")[1].split("```")[0].strip()
+            else:
+                # If no markdown, try to find just the Python code
+                import re
+                # Look for typical Python patterns
+                python_patterns = [
+                    r'import matplotlib\.pyplot',
+                    r'plt\.',
+                    r'import numpy',
+                    r'np\.'
+                ]
+                if any(re.search(pattern, text) for pattern in python_patterns):
+                    code = text
+                else:
+                    raise ValueError("Could not extract valid Python code from response")
 
             # Execute the code and get the plot
             plt.clf()

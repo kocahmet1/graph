@@ -148,20 +148,21 @@
 
     <style>
         .floating-text {
-            position: absolute;
-            font-size: 18rem;
+            position: fixed;
+            font-size: 25rem;
             font-weight: bold;
-            color: rgba(99, 102, 241, 0.12);
+            color: rgba(99, 102, 241, 0.15);
             white-space: nowrap;
             pointer-events: none;
             animation: float-text 12s infinite alternate;
             text-transform: uppercase;
             letter-spacing: 0.1em;
+            z-index: -1;
         }
 
         @keyframes float-text {
-            0% { transform: translate(-40%, -40%) rotate(-10deg); }
-            100% { transform: translate(40%, 40%) rotate(10deg); }
+            0% { transform: translate(-30%, -30%) rotate(-5deg); }
+            100% { transform: translate(30%, 30%) rotate(5deg); }
         }
     </style>
 

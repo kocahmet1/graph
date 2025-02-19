@@ -151,14 +151,25 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Sol Sütun -->
             <div class="space-y-6">
+                <!-- Açıklama Bölümü -->
+                <div class="glass-card p-6">
+                    <div class="flex items-center mb-4">
+                        <h2 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Tarif Ederek Yeni Grafik Oluştur</h2>
+                    </div>
+                    <div class="text-sm text-indigo-200 mb-2">Örnek ifadeler:</div>
+                    <div class="text-xs text-indigo-300 mb-4 space-y-1">
+                        <div>• "x² + 5x + 5 fonksiyonunun grafiğini çiz"</div>
+                        <div>• "sin(x) fonksiyonunun [-π, π] aralığındaki grafiği"</div>
+                        <div>• "y = 2x + 3 doğrusunu koordinat düzleminde göster"</div>
+                        <div>• "x ekseni ile 30° ve 60° açı yapan iki doğru çiz"</div>
+                    </div>
+                    <textarea id="description" class="textarea-modern w-full" rows="10" placeholder="Grafik açıklamasını buraya girin..."></textarea>
+                    <button onclick="generateGraph()" class="btn-primary w-full mt-4">Grafik Oluştur</button>
+                </div>
+
                 <!-- Yükleme Bölümü -->
                 <div class="glass-card p-6">
                     <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Resimdeki Sorunun Grafiğini Yeniden Oluştur</h2>
-
-                <!-- Açıklama Bölümü -->
-                <div class="glass-card p-6 mt-6">
-                    <div class="flex items-center mb-4">
-                        <h2 class="text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Tarif Ederek Yeni Grafik Oluştur</h2>
                     <label class="file-upload block">
                         <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="previewImage(this)">
                         <div id="uploadArea" class="text-indigo-200">

@@ -41,7 +41,7 @@ class WebGraphGenerator:
 
     def generate_graph_from_description(self, description):
         try:
-            model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
+            model = genai.GenerativeModel('gemini-2.0-flash')
             prompt = f'''Generate precise matplotlib code that will EXACTLY match the graph description with perfect accuracy:
 "{description}"
 
@@ -160,7 +160,7 @@ Focus on EXACT numerical values and precise positioning of graph elements ONLY.'
 
             response = model.generate_content(prompt)
             text = response.text.strip()
-
+            
             # Try to extract code from markdown if present
             if "```python" in text:
                 code = text.split("```python")[1].split("```")[0].strip()
@@ -203,7 +203,7 @@ Focus on EXACT numerical values and precise positioning of graph elements ONLY.'
             # Convert bytes to PIL Image
             image = Image.open(io.BytesIO(image_data))
 
-            model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
+            model = genai.GenerativeModel('gemini-2.0-flash')
             prompt = """Analyze this graph image and provide TWO separate sections:
 
 SECTION 1 - Graph Analysis (for recreation):
@@ -388,7 +388,7 @@ def generate_graph():
     try:
         if not graph_generator.setup_api():
             return jsonify({'error': 'API key not configured. Please add your Google API key to config.json'}), 401
-
+            
         data = request.json
         description = data.get('description', '')
         if not description:
@@ -421,7 +421,7 @@ def process_image():
 
         # Process image and get description
         result = graph_generator.process_uploaded_image(image_data)
-
+        
         # Generate graph from the description
         if result and 'description' in result:
             graph_description = result['description']
@@ -430,7 +430,7 @@ def process_image():
                 # Convert plot to base64
                 graph_img_str = base64.b64encode(graph_buf.getvalue()).decode()
                 result['graph'] = graph_img_str
-
+                
         return jsonify(result)
 
     except Exception as e:
@@ -442,7 +442,7 @@ def correct_graph():
         data = request.json
         correction = data.get('correction', '')
         current_description = data.get('current_description', '')
-
+        
         if not correction or not current_description:
             return jsonify({'error': 'Missing correction or current description'}), 400
 
@@ -458,7 +458,7 @@ Requested correction:
 Generate a revised description that precisely incorporates this correction while keeping all other elements the same.'''
 
         # Generate new description
-        model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
+        model = genai.GenerativeModel('gemini-2.0-flash')
         response = model.generate_content(enhanced_prompt)
         new_description = response.text.strip()
 

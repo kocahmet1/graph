@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Grafik Oluşturucu</title>
+    <title>Veritas AI Araçları</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -102,6 +103,8 @@
             mix-blend-mode: screen;
             animation: glow-move 8s infinite alternate;
             filter: blur(60px);
+            /* Temporarily disabled */
+            display: none;
         }
 
         @keyframes glow-move {
@@ -136,6 +139,63 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.2);
         }
+
+        /* Toggle switch styling */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #6366f1;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        .model-mode {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .model-mode-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body class="p-6">
@@ -146,14 +206,61 @@
         <div class="absolute top-3 left-3">
             <span class="text-sm uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300" style="letter-spacing: 0.2em;">Veritas Academy</span>
         </div>
-        <h1 class="text-5xl font-bold text-center mb-12 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">AI Grafik Oluşturucu</h1>
+        <h1 class="text-5xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Veritas AI Araçları</h1>
+        
+        <!-- Model Preference Toggle -->
+        <div class="flex justify-center mb-8">
+            <div class="glass-card p-3 inline-flex items-center gap-4">
+                <div class="model-mode">
+                    <span class="model-mode-label">Hızlı Mod</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="modelToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="model-mode-label">Kaliteli Mod</span>
+                </div>
+                <div class="relative group">
+                    <svg class="w-5 h-5 text-indigo-300 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="absolute left-0 bottom-full mb-2 w-64 p-2 bg-indigo-600/90 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 backdrop-blur-sm z-10">
+                        <p>Hızlı Mod: Daha hızlı sonuçlar için gemini-2.0-flash modeli kullanılır.</p>
+                        <p class="mt-1">Kaliteli Mod: Daha yüksek kalitede sonuçlar için gelişmiş gemini-2.5-pro modeli kullanılır (yavaş).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- API Key Input -->
+        <div class="flex justify-center mb-8">
+            <div class="glass-card p-4 w-full max-w-xl">
+                <div class="flex items-center mb-2">
+                    <h3 class="text-md font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Google API Anahtarı</h3>
+                    <div class="relative ml-2 group">
+                        <svg class="w-5 h-5 text-indigo-300 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="absolute left-0 bottom-full mb-2 w-72 p-2 bg-indigo-600/90 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 backdrop-blur-sm z-10">
+                            <p>Google Generative AI modellerini kullanmak için kendi API anahtarınızı girin. API anahtarı almak için <a href="https://ai.google.dev/tutorials/setup" target="_blank" class="underline">Google AI Studio</a> sitesini ziyaret edin.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex">
+                    <input type="password" id="apiKeyInput" placeholder="Google API Anahtarınızı Girin" class="textarea-modern w-full mr-2" />
+                    <button id="saveApiKeyBtn" class="btn-primary whitespace-nowrap">Kullan</button>
+                </div>
+                <div id="apiKeyStatus" class="text-xs mt-2 hidden"></div>
+            </div>
+        </div>
 
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8"></div>
+            
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Sol Sütun -->
             <div class="space-y-6">
                 <!-- Yükleme Bölümü -->
                 <div class="glass-card p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Resimdeki Sorunun Grafiğini Yeniden Oluştur</h2>
+                    <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Resimdeki Soruyu Tekrar oluştur/Temizle</h2>
                     <label class="file-upload block">
                         <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="previewImage(this)">
                         <div id="uploadArea" class="text-indigo-200">
@@ -167,7 +274,7 @@
                         </div>
                     </label>
                     <button onclick="uploadImage()" class="btn-primary w-full mt-4">
-                        Resmi Analiz Et ve Grafik Oluştur
+                        Oluştur
                     </button>
                 </div>
 
@@ -184,6 +291,36 @@
                             <ul id="answerChoices" class="list-disc pl-5 mt-1 text-gray-300"></ul>
                         </div>
                     </div>
+                </div>
+                
+                <!-- Yeni Özellik: Soru Üretme -->
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Yeni Soru Üretme</h2>
+                    <p class="text-sm mb-4 text-gray-300">Bir soru görselini yükleyin, yapay zeka soruyu okuyacak ve benzer tipte yeni bir soru oluşturacak.</p>
+                    
+                    <div class="file-upload mb-4" id="questionImageUpload">
+                        <input type="file" id="questionImageInput" accept="image/*" class="hidden" />
+                        <div class="flex flex-col items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mb-2 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <p class="text-sm">Soru görseli yüklemek için tıklayın veya sürükleyin</p>
+                        </div>
+                    </div>
+                    
+                    <div id="questionPreviewContainer" class="hidden mb-4">
+                        <p class="text-sm font-medium mb-2">Yüklenen Görsel:</p>
+                        <div class="aspect-w-16 aspect-h-9 bg-black/20 rounded-lg overflow-hidden">
+                            <img id="questionPreview" src="" alt="Önizleme" class="object-contain w-full h-full" />
+                        </div>
+                        <div class="flex justify-end mt-2">
+                            <button id="cancelQuestionUpload" class="text-xs text-red-400 hover:text-red-300">İptal</button>
+                        </div>
+                    </div>
+                    
+                    <button id="generateNewQuestionBtn" class="btn-primary w-full mt-2 mb-4 hidden">
+                        <span>Yeni Soru Oluştur</span>
+                    </button>
                 </div>
 
                 <!-- Açıklama Bölümü -->
@@ -215,22 +352,60 @@
 
             <!-- Sağ Sütun -->
             <div class="glass-card p-6">
-                <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Oluşturulan Grafik</h2>
-                <div id="graphContainer" class="w-full flex flex-col justify-center items-center min-h-[400px] rounded-lg border border-indigo-500/10 bg-gradient-to-br from-indigo-500/5 to-purple-500/5">
-                    <p class="text-indigo-200">Oluşturulan grafik burada görünecek...</p>
-                </div>
-                <div id="correctionUI" class="mt-4 hidden relative">
-                    <div class="absolute -top-12 left-0 w-full opacity-0 pointer-events-none animate-tooltip">
-                        <div class="bg-indigo-600/90 text-white p-3 rounded-lg text-sm backdrop-blur-sm">
-                            💡 Grafiği düzeltmek için doğal dil kullanabilirsiniz. Örneğin: "eğimi artır" veya "C açısını 90 derece yap"
-                            <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
-                                <div class="border-8 border-transparent border-t-indigo-600/90"></div>
+                <h2 class="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Oluşturulan Soru</h2>
+                <div class="flex flex-col">
+                    <div id="captureArea" class="bg-white rounded-lg overflow-hidden">
+                        <div id="graphContainer" class="w-full flex flex-col justify-center items-center min-h-[400px]">
+                            <p class="text-gray-500 py-8">Oluşturulan grafik burada görünecek...</p>
+                        </div>
+                        <div id="questionDisplayArea" class="w-full p-4 text-black hidden">
+                            <p id="displayQuestionText" class="mb-3 text-base leading-relaxed"></p>
+                            <ul id="displayAnswerChoices" class="list-disc pl-5 text-base leading-relaxed"></ul>
+                        </div>
+                        <!-- Question Result Container (Used by question generation feature) -->
+                        <div id="questionResult" class="hidden">
+                            <div class="bg-indigo-900/30 rounded-lg p-4 mb-4">
+                                <h3 class="text-md font-medium mb-2 text-indigo-200">Orijinal İçerik:</h3>
+                                <div id="originalPassageContainer" class="mb-4 hidden">
+                                    <h4 class="text-sm font-medium mb-1 text-indigo-300">Parça/Metin:</h4>
+                                    <div id="originalPassage" class="text-sm mb-3 text-gray-300 whitespace-pre-line border-l-2 border-indigo-700 pl-3"></div>
+                                </div>
+                                <div class="mb-2">
+                                    <h4 class="text-sm font-medium mb-1 text-indigo-300">Soru:</h4>
+                                    <p id="originalQuestion" class="text-sm mb-2 text-gray-300"></p>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium mb-1 text-indigo-300">Şıklar:</h4>
+                                    <div id="originalAnswers" class="text-sm text-gray-400 grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-md font-medium text-black">Yeni İçerik:</h3>
+                                    <button id="downloadQuestionBtn" class="text-sm px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-white rounded transition-colors flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                        </svg>
+                                        JPG olarak indir
+                                    </button>
+                                </div>
+                                
+                                <!-- Capture area for download - title is outside this div -->
+                                <div id="questionCaptureArea" class="bg-white">
+                                    <div id="newPassageContainer" class="mb-4 hidden border-b pb-3 border-gray-200">
+                                        <div id="newPassage" class="text-black whitespace-pre-line text-sm"></div>
+                                    </div>
+                                    <div id="newQuestionContainer" class="mb-3">
+                                        <p id="newQuestion" class="text-black text-sm font-medium"></p>
+                                    </div>
+                                    <div id="newAnswers" class="text-black text-sm grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <textarea id="correctionPrompt" class="textarea-modern w-full" rows="2" placeholder="Düzeltmeleri girin, örneğin: 'eğimi artır' veya 'C açısını 90 derece yap'..."></textarea>
-                    <button onclick="applyCorrection()" class="btn-primary w-full mt-2">
-                        Düzeltmeyi Uygula
+                    <button id="downloadImageBtn" onclick="downloadAsImage()" class="btn-primary mt-4 hidden">
+                        Resim Olarak İndir (JPG)
                     </button>
                 </div>
             </div>
@@ -241,11 +416,184 @@
     <div id="loading" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50">
         <div class="glass-card p-8 flex flex-col items-center">
             <div class="loader mb-4"></div>
-            <p class="text-indigo-200">İşleniyor...</p>
+            <p id="loadingText" class="text-indigo-200">İşleniyor...</p>
         </div>
     </div>
 
     <script>
+        // Model preference toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Question generation feature setup
+            setupQuestionGenerationFeature();
+            
+            // Get the current model preference when the page loads
+            fetch('/api/get-model-preference')
+                .then(response => response.json())
+                .then(data => {
+                    const toggle = document.getElementById('modelToggle');
+                    // If preference is 'slow', check the toggle (since slow mode is on the checked side)
+                    toggle.checked = data.preference === 'slow';
+                })
+                .catch(error => console.error('Error fetching model preference:', error));
+            
+            // Add event listener for the toggle change
+            document.getElementById('modelToggle').addEventListener('change', function() {
+                const preference = this.checked ? 'slow' : 'fast';
+                showModelChangeLoading(preference);
+                
+                fetch('/api/toggle-model-preference', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ preference }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideModelChangeLoading();
+                    if (data.status === 'success') {
+                        showModelChangeToast(preference);
+                    } else {
+                        console.error('Failed to change model preference:', data.error);
+                    }
+                })
+                .catch(error => {
+                    hideModelChangeLoading();
+                    console.error('Error changing model preference:', error);
+                });
+            });
+            
+            // API Key functionality
+            // Check if there's an API key set
+            fetch('/api/get-api-key')
+                .then(response => response.json())
+                .then(data => {
+                    const apiKeyInput = document.getElementById('apiKeyInput');
+                    const apiKeyStatus = document.getElementById('apiKeyStatus');
+                    
+                    if (data.hasApiKey) {
+                        apiKeyInput.placeholder = "••••••••••••••••••••••••••••••";
+                        apiKeyStatus.textContent = "✓ API anahtarı ayarlanmış";
+                        apiKeyStatus.classList.remove('hidden', 'text-red-400');
+                        apiKeyStatus.classList.add('text-green-400');
+                    } else {
+                        apiKeyStatus.textContent = "⚠️ Lütfen API anahtarınızı girin";
+                        apiKeyStatus.classList.remove('hidden', 'text-green-400');
+                        apiKeyStatus.classList.add('text-red-400');
+                    }
+                    
+                    apiKeyStatus.classList.remove('hidden');
+                })
+                .catch(error => console.error('Error checking API key status:', error));
+            
+            // Save API key button handler
+            document.getElementById('saveApiKeyBtn').addEventListener('click', function() {
+                const apiKey = document.getElementById('apiKeyInput').value.trim();
+                const apiKeyStatus = document.getElementById('apiKeyStatus');
+                
+                if (!apiKey) {
+                    apiKeyStatus.textContent = "⚠️ Lütfen geçerli bir API anahtarı girin";
+                    apiKeyStatus.classList.remove('hidden', 'text-green-400');
+                    apiKeyStatus.classList.add('text-red-400');
+                    return;
+                }
+                
+                // Show loading while saving API key
+                showModelChangeLoading("API Anahtarı Kaydediliyor...");
+                
+                fetch('/api/update-api-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ api_key: apiKey }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideModelChangeLoading();
+                    
+                    if (data.status === 'success') {
+                        // Clear the input field and show success message
+                        document.getElementById('apiKeyInput').value = '';
+                        document.getElementById('apiKeyInput').placeholder = "••••••••••••••••••••••••••••••";
+                        
+                        apiKeyStatus.textContent = "✓ API anahtarı başarıyla kaydedildi";
+                        apiKeyStatus.classList.remove('hidden', 'text-red-400');
+                        apiKeyStatus.classList.add('text-green-400');
+                        
+                        // Show success toast
+                        showApiKeyToast(true);
+                    } else {
+                        apiKeyStatus.textContent = "⚠️ API anahtarı kaydedilemedi: " + data.error;
+                        apiKeyStatus.classList.remove('hidden', 'text-green-400');
+                        apiKeyStatus.classList.add('text-red-400');
+                        
+                        // Show error toast
+                        showApiKeyToast(false, data.error);
+                    }
+                })
+                .catch(error => {
+                    hideModelChangeLoading();
+                    console.error('Error saving API key:', error);
+                    
+                    apiKeyStatus.textContent = "⚠️ API anahtarı kaydedilemedi";
+                    apiKeyStatus.classList.remove('hidden', 'text-green-400');
+                    apiKeyStatus.classList.add('text-red-400');
+                });
+            });
+        });
+        
+        function showModelChangeLoading(message) {
+            // Show loading indicator for model change
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loadingText');
+            loadingText.textContent = message || (preference === 'slow' ? 'Kaliteli Moda Geçiliyor...' : 'Hızlı Moda Geçiliyor...');
+            loading.classList.remove('hidden');
+            loading.classList.add('flex');
+        }
+        
+        function hideModelChangeLoading() {
+            // Hide loading indicator
+            const loading = document.getElementById('loading');
+            loading.classList.remove('flex');
+            loading.classList.add('hidden');
+        }
+        
+        function showModelChangeToast(preference) {
+            // Create and show a toast notification for model change
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 glass-card p-4 text-white z-50 animate-tooltip';
+            toast.innerHTML = preference === 'slow' 
+                ? 'Kaliteli Moda Geçildi (Daha Yavaş, Daha Doğru)' 
+                : 'Hızlı Moda Geçildi (Daha Hızlı)';
+            
+            document.body.appendChild(toast);
+            
+            // Remove toast after animation completes
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+        
+        function showApiKeyToast(success, errorMessage) {
+            // Create and show a toast notification for API key operations
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 glass-card p-4 text-white z-50 animate-tooltip';
+            
+            if (success) {
+                toast.innerHTML = 'API anahtarı başarıyla kaydedildi';
+            } else {
+                toast.innerHTML = 'API anahtarı kaydedilemedi' + (errorMessage ? ': ' + errorMessage : '');
+            }
+            
+            document.body.appendChild(toast);
+            
+            // Remove toast after animation completes
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
         function previewImage(input) {
             const preview = document.getElementById('preview');
             const uploadArea = document.getElementById('uploadArea');
@@ -317,6 +665,10 @@
                 alert('Lütfen bir resim seçin');
                 return;
             }
+            
+            // Hide question result if visible and show graph container
+            document.getElementById('questionResult').classList.add('hidden');
+            document.getElementById('graphContainer').classList.remove('hidden');
 
             showLoading();
 
@@ -331,25 +683,47 @@
 
                 const data = await response.json();
 
+                if (!data) {
+                    throw new Error('Veri alınamadı');
+                }
+
                 if (data.error) {
                     throw new Error(data.error);
                 }
 
-                document.getElementById('description').value = data.description;
+                document.getElementById('description').value = data.description || '';
 
-                if (data.question_info && (data.question_info.question || data.question_info.answers.length > 0)) {
+                if (data.question_info && (data.question_info.question || (data.question_info.answers && data.question_info.answers.length > 0))) {
                     document.getElementById('questionInfo').classList.remove('hidden');
-                    document.getElementById('questionText').textContent = data.question_info.question;
+                    document.getElementById('questionText').textContent = data.question_info.question || '';
 
                     const answerList = document.getElementById('answerChoices');
                     answerList.innerHTML = '';
-                    data.question_info.answers.forEach(answer => {
-                        const li = document.createElement('li');
-                        li.textContent = answer;
-                        answerList.appendChild(li);
-                    });
+                    if (data.question_info.answers && Array.isArray(data.question_info.answers)) {
+                        data.question_info.answers.forEach(answer => {
+                            const li = document.createElement('li');
+                            li.textContent = answer;
+                            answerList.appendChild(li);
+                        });
+                    }
+
+                    // Populate the display area in the graph section
+                    document.getElementById('displayQuestionText').textContent = data.question_info.question || '';
+                    const displayAnswerList = document.getElementById('displayAnswerChoices');
+                    displayAnswerList.innerHTML = '';
+                    if (data.question_info.answers && Array.isArray(data.question_info.answers)) {
+                        data.question_info.answers.forEach(answer => {
+                            const li = document.createElement('li');
+                            li.textContent = answer;
+                            displayAnswerList.appendChild(li);
+                        });
+                    }
+                    document.getElementById('questionDisplayArea').classList.remove('hidden');
+                    document.getElementById('downloadImageBtn').classList.remove('hidden');
                 } else {
                     document.getElementById('questionInfo').classList.add('hidden');
+                    document.getElementById('questionDisplayArea').classList.add('hidden');
+                    document.getElementById('downloadImageBtn').classList.add('hidden');
                 }
 
                 // Automatically generate graph if description exists
@@ -357,9 +731,9 @@
                     // Show loading animation
                     const graphContainer = document.getElementById('graphContainer');
                     graphContainer.innerHTML = `
-                        <div class="flex flex-col items-center">
+                        <div class="flex flex-col items-center py-8">
                             <div class="loader mb-4"></div>
-                            <p class="text-indigo-200">Grafik oluşturuluyor...</p>
+                            <p class="text-gray-500">Grafik oluşturuluyor...</p>
                         </div>
                     `;
                     generateGraph();
@@ -379,6 +753,10 @@
                 alert('Lütfen bir grafik açıklaması girin');
                 return;
             }
+            
+            // Hide question result if visible and show graph container
+            document.getElementById('questionResult').classList.add('hidden');
+            document.getElementById('graphContainer').classList.remove('hidden');
 
             showLoading();
 
@@ -393,57 +771,459 @@
 
                 const data = await response.json();
 
+                if (!data) {
+                    throw new Error('Veri alınamadı');
+                }
+
                 if (data.error) {
                     throw new Error(data.error);
                 }
 
                 const graphContainer = document.getElementById('graphContainer');
-                graphContainer.innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Oluşturulan Grafik" class="max-w-full h-auto rounded-lg">`;
+                graphContainer.innerHTML = `<div class="p-4 bg-white rounded-lg"><img src="data:image/png;base64,${data.image}" alt="Oluşturulan Grafik" class="max-w-full h-auto"></div>`;
 
             } catch (error) {
                 alert('Hata: ' + error.message);
             } finally {
                 hideLoading();
             }
-            document.getElementById('correctionUI').classList.remove('hidden');
         }
 
-        async function applyCorrection() {
-            const correctionPrompt = document.getElementById('correctionPrompt').value;
-            if (!correctionPrompt.trim()) {
-                alert('Lütfen bir düzeltme açıklaması girin');
+        function downloadAsImage() {
+            const captureArea = document.getElementById('captureArea');
+            
+            // Show a brief loading indicator
+            const loadingEl = document.createElement('div');
+            loadingEl.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50';
+            loadingEl.innerHTML = `
+                <div class="glass-card p-4 flex flex-col items-center">
+                    <div class="loader mb-2"></div>
+                    <p class="text-indigo-200">Resim oluşturuluyor...</p>
+                </div>
+            `;
+            document.body.appendChild(loadingEl);
+
+            // Capture the combined area
+            html2canvas(captureArea, {
+                allowTaint: true,
+                useCORS: true,
+                scale: 2,
+                backgroundColor: 'white',
+                logging: false
+            }).then(canvas => {
+                // Create and download the image
+                const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+                const a = document.createElement('a');
+                a.href = dataURL;
+                a.download = 'soru_ve_grafik.jpg';
+                
+                // Remove loading indicator and trigger download
+                document.body.removeChild(loadingEl);
+                a.click();
+            }).catch(error => {
+                console.error('Error generating image:', error);
+                document.body.removeChild(loadingEl);
+                alert('Resim oluşturulurken bir hata oluştu.');
+            });
+        }
+        
+        function downloadQuestionAsImage() {
+            const captureArea = document.getElementById('questionCaptureArea');
+            
+            // Show a brief loading indicator
+            const loadingEl = document.createElement('div');
+            loadingEl.className = 'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50';
+            loadingEl.innerHTML = `
+                <div class="glass-card p-4 flex flex-col items-center">
+                    <div class="loader mb-2"></div>
+                    <p class="text-indigo-200">Soru resmi oluşturuluyor...</p>
+                </div>
+            `;
+            document.body.appendChild(loadingEl);
+
+            // Capture just the question area (without the title)
+            html2canvas(captureArea, {
+                allowTaint: true,
+                useCORS: true,
+                scale: 2,
+                backgroundColor: 'white',
+                logging: false
+            }).then(canvas => {
+                // Create and download the image
+                const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+                const a = document.createElement('a');
+                a.href = dataURL;
+                a.download = 'yeni_soru.jpg';
+                
+                // Remove loading indicator and trigger download
+                document.body.removeChild(loadingEl);
+                a.click();
+            }).catch(error => {
+                console.error('Error generating question image:', error);
+                document.body.removeChild(loadingEl);
+                alert('Soru resmi oluşturulurken bir hata oluştu.');
+            });
+        }
+        // Question generation feature
+        function setupQuestionGenerationFeature() {
+            const questionImageUpload = document.getElementById('questionImageUpload');
+            const questionImageInput = document.getElementById('questionImageInput');
+            const questionPreviewContainer = document.getElementById('questionPreviewContainer');
+            const questionPreview = document.getElementById('questionPreview');
+            const cancelQuestionUpload = document.getElementById('cancelQuestionUpload');
+            const generateNewQuestionBtn = document.getElementById('generateNewQuestionBtn');
+            const questionResult = document.getElementById('questionResult');
+            
+            // Click event for the upload area
+            questionImageUpload.addEventListener('click', function() {
+                questionImageInput.click();
+            });
+            
+            // File input change event
+            questionImageInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    previewQuestionImage(e.target.files[0]);
+                }
+            });
+            
+            // Cancel upload button
+            cancelQuestionUpload.addEventListener('click', function() {
+                resetQuestionUpload();
+            });
+            
+            // Generate new question button
+            generateNewQuestionBtn.addEventListener('click', function() {
+                generateNewQuestion();
+            });
+            
+            // Drag and drop for question image upload
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                questionImageUpload.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                questionImageUpload.addEventListener(eventName, () => {
+                    questionImageUpload.classList.add('border-indigo-400');
+                    questionImageUpload.classList.add('bg-indigo-900/20');
+                }, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                questionImageUpload.addEventListener(eventName, () => {
+                    questionImageUpload.classList.remove('border-indigo-400');
+                    questionImageUpload.classList.remove('bg-indigo-900/20');
+                }, false);
+            });
+            
+            questionImageUpload.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const file = dt.files[0];
+                if (file) {
+                    previewQuestionImage(file);
+                }
+            }, false);
+        }
+        
+        function previewQuestionImage(file) {
+            const questionPreviewContainer = document.getElementById('questionPreviewContainer');
+            const questionPreview = document.getElementById('questionPreview');
+            const generateNewQuestionBtn = document.getElementById('generateNewQuestionBtn');
+            const questionResult = document.getElementById('questionResult');
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                questionPreview.src = e.target.result;
+                questionPreviewContainer.classList.remove('hidden');
+                generateNewQuestionBtn.classList.remove('hidden');
+                questionResult.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+            
+            // Store the file for upload
+            window.questionFile = file;
+        }
+        
+        function resetQuestionUpload() {
+            const questionImageInput = document.getElementById('questionImageInput');
+            const questionPreviewContainer = document.getElementById('questionPreviewContainer');
+            const generateNewQuestionBtn = document.getElementById('generateNewQuestionBtn');
+            
+            questionImageInput.value = "";
+            questionPreviewContainer.classList.add('hidden');
+            generateNewQuestionBtn.classList.add('hidden');
+            window.questionFile = null;
+        }
+        
+        function checkIfMathQuestion(originalAnswers, newAnswers) {
+            // Math questions usually have answers with numbers and simple format like [A. number]
+            let mathPatterns = 0;
+            
+            // Check if original answers match math answer patterns
+            for (const answer of originalAnswers) {
+                // Look for patterns like "[A. 10]" or "[C. 15]" and similar
+                if (/^\[?[A-D]\. \d+(\.\d+)?\]?$/.test(answer.trim())) {
+                    mathPatterns++;
+                }
+                // Look for common math terms in the answers
+                if (answer.includes('=') || answer.includes('+') || answer.includes('-') || 
+                    answer.includes('×') || answer.includes('÷') || 
+                    answer.includes('*') || answer.includes('/')) {
+                    mathPatterns++;
+                }
+            }
+            
+            // Also check new answers
+            for (const answer of newAnswers) {
+                if (/^\[?[A-D]\. \d+(\.\d+)?\]?$/.test(answer.trim())) {
+                    mathPatterns++;
+                }
+                if (answer.includes('=') || answer.includes('+') || answer.includes('-') || 
+                    answer.includes('×') || answer.includes('÷') || 
+                    answer.includes('*') || answer.includes('/')) {
+                    mathPatterns++;
+                }
+            }
+            
+            // If we have at least a few matches, it's likely a math question
+            return mathPatterns >= 2;
+        }
+        
+        function findRepeatedSentence(text) {
+            // Split the text into sentences (considering multiple types of delimiters)
+            const sentences = text.split(/(?<=[.!?])\s+/);
+            const result = {
+                found: false,
+                cleanedText: text
+            };
+            
+            // If only one sentence, there's no repetition
+            if (sentences.length <= 1) return result;
+            
+            // Look for any sentence that appears more than once
+            const seen = new Map();
+            const repeats = [];
+            
+            for (const sentence of sentences) {
+                const trimmed = sentence.trim();
+                if (trimmed.length < 5) continue; // Skip very short fragments
+                
+                if (seen.has(trimmed)) {
+                    repeats.push(trimmed);
+                } else {
+                    seen.set(trimmed, true);
+                }
+            }
+            
+            // If we found repeats, create a clean version without repetition
+            if (repeats.length > 0) {
+                result.found = true;
+                let cleanedText = text;
+                
+                for (const repeat of repeats) {
+                    // Keep only the first instance of each repeated sentence
+                    const firstIndex = cleanedText.indexOf(repeat);
+                    const restOfText = cleanedText.substring(firstIndex + repeat.length);
+                    const secondIndex = restOfText.indexOf(repeat);
+                    
+                    if (secondIndex !== -1) {
+                        cleanedText = cleanedText.substring(0, firstIndex + repeat.length) + 
+                                     restOfText.replace(repeat, '').trim();
+                    }
+                }
+                
+                result.cleanedText = cleanedText;
+            }
+            
+            return result;
+        }
+        
+        function extractMathQuestion(text) {
+            // This function handles the specific case shown in the example,
+            // where a math problem statement is followed by the same question statement
+            
+            // First, try to find the last question
+            const questionMarks = text.split('?');
+            if (questionMarks.length <= 2) return text; // No repeated questions
+            
+            const lastFullQuestion = questionMarks[questionMarks.length - 2].trim() + '?';
+            
+            // Check if the last question appears elsewhere in the text
+            const firstOccurrence = text.indexOf(lastFullQuestion);
+            const secondOccurrence = text.indexOf(lastFullQuestion, firstOccurrence + 1);
+            
+            if (secondOccurrence !== -1) {
+                // If the question is repeated, return everything up to the first occurrence of the last question
+                // (including the question itself)
+                return text.substring(0, firstOccurrence + lastFullQuestion.length).trim();
+            }
+            
+            return text;
+        }
+        
+        function generateNewQuestion() {
+            if (!window.questionFile) {
                 return;
             }
-
+            
             showLoading();
-
-            try {
-                const response = await fetch('/api/correct', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        correction: correctionPrompt,
-                        current_description: document.getElementById('description').value
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.error) {
-                    throw new Error(data.error);
+            
+            const formData = new FormData();
+            formData.append('image', window.questionFile);
+            
+            fetch('/api/generate-new-question', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                // First check if the response is ok
+                if (!response.ok) {
+                    // Try to parse as JSON first
+                    return response.text().then(text => {
+                        let errorMessage = 'Something went wrong';
+                        
+                        try {
+                            // Try to parse the response as JSON
+                            const data = JSON.parse(text);
+                            if (data && data.error) {
+                                errorMessage = data.error;
+                            }
+                        } catch (e) {
+                            // If it's not valid JSON, check if it's HTML
+                            if (text.includes('<!doctype') || text.includes('<html')) {
+                                errorMessage = 'Server returned an HTML error page instead of JSON';
+                            } else {
+                                errorMessage = text;
+                            }
+                        }
+                        
+                        throw new Error(errorMessage);
+                    });
                 }
-
-                document.getElementById('description').value = data.description;
-                const graphContainer = document.getElementById('graphContainer');
-                graphContainer.innerHTML = `<img src="data:image/png;base64,${data.image}" alt="Oluşturulan Grafik" class="max-w-full h-auto rounded-lg">`;
-
-            } catch (error) {
-                alert('Hata: ' + error.message);
-            } finally {
+                
+                // If response is ok, try to parse as JSON
+                return response.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.error('Failed to parse JSON response:', text);
+                        throw new Error('Invalid JSON response from server');
+                    }
+                });
+            })
+            .then(data => {
+                displayQuestionResults(data);
                 hideLoading();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+                hideLoading();
+            });
+        }
+        
+        function displayQuestionResults(data) {
+            const graphContainer = document.getElementById('graphContainer');
+            const questionDisplayArea = document.getElementById('questionDisplayArea');
+            const questionResult = document.getElementById('questionResult');
+            const originalQuestion = document.getElementById('originalQuestion');
+            const originalAnswers = document.getElementById('originalAnswers');
+            const newQuestion = document.getElementById('newQuestion');
+            const newAnswers = document.getElementById('newAnswers');
+            const originalPassageContainer = document.getElementById('originalPassageContainer');
+            const originalPassage = document.getElementById('originalPassage');
+            const newPassageContainer = document.getElementById('newPassageContainer');
+            const newPassage = document.getElementById('newPassage');
+            
+            // Handle original passage if present
+            if (data.original_passage && data.original_passage.trim() !== "") {
+                originalPassage.textContent = data.original_passage;
+                originalPassageContainer.classList.remove("hidden");
+            } else {
+                originalPassageContainer.classList.add("hidden");
             }
+            
+            // Handle new passage if present
+            if (data.new_passage && data.new_passage.trim() !== "") {
+                newPassage.textContent = data.new_passage;
+                newPassageContainer.classList.remove("hidden");
+            } else {
+                newPassageContainer.classList.add("hidden");
+            }
+            
+            // Check if this is a math question by analyzing the answers (usually letters with numbers)
+            const isMathQuestion = checkIfMathQuestion(data.original_answers, data.new_answers);
+            
+            // For math questions, check if the question statement is repeated in the beginning of the question
+            let originalQuestionText = data.original_question;
+            let newQuestionText = data.new_question;
+            
+            if (isMathQuestion) {
+                // First, check if the new question contains the same sentence repeated (common with math questions)
+                const repeatedSentenceCheck = findRepeatedSentence(newQuestionText);
+                if (repeatedSentenceCheck.found) {
+                    newQuestionText = repeatedSentenceCheck.cleanedText;
+                }
+                
+                // Also check the original question for repeats
+                const originalRepeatedCheck = findRepeatedSentence(originalQuestionText);
+                if (originalRepeatedCheck.found) {
+                    originalQuestionText = originalRepeatedCheck.cleanedText;
+                }
+                
+                // Also detect the pattern from the example where the final question is repeated
+                if (originalQuestionText.indexOf('?') !== -1 && originalQuestionText.indexOf('?') !== originalQuestionText.lastIndexOf('?')) {
+                    // Find the last question in the text
+                    const lastQuestion = originalQuestionText.split('?').slice(-2)[0].trim() + '?';
+                    // Check if this question appears multiple times
+                    if (originalQuestionText.indexOf(lastQuestion) !== originalQuestionText.lastIndexOf(lastQuestion)) {
+                        // Keep only the question and any context before it that's not a repeat
+                        originalQuestionText = extractMathQuestion(originalQuestionText);
+                    }
+                }
+                
+                // Apply the same logic to the new question
+                if (newQuestionText.indexOf('?') !== -1 && newQuestionText.indexOf('?') !== newQuestionText.lastIndexOf('?')) {
+                    const lastQuestion = newQuestionText.split('?').slice(-2)[0].trim() + '?';
+                    if (newQuestionText.indexOf(lastQuestion) !== newQuestionText.lastIndexOf(lastQuestion)) {
+                        newQuestionText = extractMathQuestion(newQuestionText);
+                    }
+                }
+            }
+            
+            // Display original question and answers
+            originalQuestion.textContent = originalQuestionText;
+            originalAnswers.innerHTML = '';
+            data.original_answers.forEach(answer => {
+                const div = document.createElement('div');
+                div.className = 'p-2 rounded bg-indigo-950/40';
+                div.textContent = answer;
+                originalAnswers.appendChild(div);
+            });
+            
+            // Display new question and answers
+            newQuestion.textContent = newQuestionText;
+            newAnswers.innerHTML = '';
+            data.new_answers.forEach(answer => {
+                const div = document.createElement('div');
+                div.className = 'p-2 rounded border border-gray-300 bg-gray-50';
+                div.textContent = answer;
+                newAnswers.appendChild(div);
+            });
+            
+            // Setup the download button event listener
+            document.getElementById('downloadQuestionBtn').addEventListener('click', downloadQuestionAsImage);
+            
+            // Hide the default graph elements and show the question result
+            graphContainer.classList.add('hidden');
+            questionDisplayArea.classList.add('hidden');
+            questionResult.classList.remove('hidden');
+            
+            // Make sure the download button is hidden as it's only for graphs
+            document.getElementById('downloadImageBtn').classList.add('hidden');
+            
+            // Scroll to the results area
+            document.querySelector('.glass-card h2').scrollIntoView({behavior: 'smooth'});
         }
     </script>
 </body>

@@ -19,29 +19,140 @@ class WebGraphGenerator:
     def __init__(self):
         self.current_description = ""
         self.setup_api()
+        self.model_preference = "slow"  # Default to slow mode
+        self.api_key = None
 
     def setup_api(self):
         try:
-            with open("config.json") as f:
-                config = json.load(f)
-                api_key = config.get("GOOGLE_API_KEY")
-                if not api_key:
-                    raise ValueError("No API key found in config.json")
+            try:
+                with open("config.json") as f:
+                    config = json.load(f)
+                    api_key = config.get("GOOGLE_API_KEY")
+                    if not api_key:
+                        print("No API key found in config.json")
+                        return False
+                    
+                    # Store the API key
+                    self.api_key = api_key
+                    
+                    # Load model preference from config if available
+                    self.model_preference = config.get("MODEL_PREFERENCE", "slow")
+            except FileNotFoundError:
+                print("config.json file not found")
+                return False
+            except json.JSONDecodeError:
+                print("Invalid JSON in config.json file")
+                return False
+            except Exception as e:
+                print(f"Error reading config.json: {str(e)}")
+                return False
+                
+            # Now let's try to configure the genai library
+            try:
+                # Configure the genai library
                 genai.configure(api_key=api_key)
+                
+                # Test the API key with a small request
+                model = genai.GenerativeModel('gemini-2.0-flash')
+                response = model.generate_content("Test")
+                
+                # If we got here, the API key is valid
                 return True
-        except Exception as e:
-            print(f"API setup error: {str(e)}")
-            return False
-        except FileNotFoundError:
-            print("config.json file not found")
-            return False
+            except Exception as api_error:
+                print(f"Error configuring Gemini API: {str(api_error)}")
+                return False
         except Exception as e:
             print(f"Error setting up API: {str(e)}")
+            return False
+            
+    def update_api_key(self, new_api_key):
+        """Update the API key in config.json and reconfigure genai"""
+        try:
+            # Make sure we have a valid API key string
+            if not new_api_key or not isinstance(new_api_key, str) or len(new_api_key) < 10:
+                return False, "Invalid API key format"
+            
+            # Save the old API key in case we need to revert
+            old_api_key = self.api_key
+            
+            # First test that the API key is valid
+            try:
+                genai.configure(api_key=new_api_key)
+                
+                # Try to initialize a model with the new API key to verify it works
+                model = genai.GenerativeModel('gemini-2.0-flash')
+                response = model.generate_content("Test")
+                
+                # If we get here, the API key is valid
+                # Update the stored API key
+                self.api_key = new_api_key
+            except Exception as e:
+                # API key validation failed
+                # Revert to previous key if there was one
+                if old_api_key:
+                    genai.configure(api_key=old_api_key)
+                return False, f"Invalid API key: {str(e)}"
+            
+            # Now save to config.json
+            try:
+                # First read the existing config
+                try:
+                    with open("config.json", "r") as f:
+                        config = json.load(f)
+                except (FileNotFoundError, json.JSONDecodeError):
+                    # If the file doesn't exist or is invalid, create a new config
+                    config = {}
+                
+                # Update the API key in the config
+                config["GOOGLE_API_KEY"] = new_api_key
+                
+                # Save the updated config
+                with open("config.json", "w") as f:
+                    json.dump(config, f, indent=4)
+                
+                return True, None
+            except Exception as file_error:
+                # If we can't save to the file, still keep using the new API key in memory
+                # but report the error
+                return False, f"API key is valid but couldn't save to config.json: {str(file_error)}"
+        except Exception as e:
+            return False, f"Error updating API key: {str(e)}"
+
+    def get_model(self, task_type="default"):
+        """
+        Returns the appropriate model based on current preference and task type
+        task_type: Can be 'default', 'image', 'code', or other task-specific identifiers
+        """
+        if self.model_preference == "fast":
+            # Fast mode: use gemini-2.0-flash for everything
+            return genai.GenerativeModel('gemini-2.0-flash')
+        else:
+            # Slow mode: use the more capable model for complex tasks
+            if task_type in ["default", "code", "graph_generation"]:
+                return genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
+            else:
+                # For simpler tasks, still use the faster model
+                return genai.GenerativeModel('gemini-2.0-flash')
+
+    def save_model_preference(self):
+        """Save the current model preference to config.json"""
+        try:
+            with open("config.json", "r") as f:
+                config = json.load(f)
+            
+            config["MODEL_PREFERENCE"] = self.model_preference
+            
+            with open("config.json", "w") as f:
+                json.dump(config, f, indent=4)
+            
+            return True
+        except Exception as e:
+            print(f"Error saving model preference: {str(e)}")
             return False
 
     def generate_graph_from_description(self, description):
         try:
-            model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
+            model = self.get_model(task_type="graph_generation")
             prompt = f'''Generate precise matplotlib code that will EXACTLY match the graph description with perfect accuracy:
 "{description}"
 
@@ -198,12 +309,257 @@ Focus on EXACT numerical values and precise positioning of graph elements ONLY.'
             print(f"Error generating graph: {str(e)}")
             return None
 
+    def extract_question_info(self, image_data):
+        try:
+            # Convert bytes to PIL Image
+            image = Image.open(io.BytesIO(image_data))
+
+            # Use a more capable model for complex text extraction
+            model = self.get_model(task_type="image")
+            prompt = """Analyze this image of a reading comprehension or test question and extract ALL of the following components if present:
+
+1. Any PASSAGE text (reading material, context, story, or information that precedes the question)
+2. The COMPLETE question text
+3. All answer choices (A, B, C, D, etc.)
+
+Format your response as follows:
+PASSAGE: [complete passage text if present, otherwise "No passage"]
+QUESTION: [full question text]
+CHOICES: [A. first choice], [B. second choice], [C. third choice], [D. fourth choice]
+
+VERY IMPORTANT INSTRUCTIONS:
+- INCLUDE the ENTIRE passage and ALL text in the image
+- Extract ALL text in the image, even if it spans multiple paragraphs
+- Maintain paragraph breaks in the passage text
+- Do NOT omit or truncate ANY content from the passage
+- Include ALL formulas, symbols, and special characters exactly as shown
+- Preserve mathematical notations, equations, and formatting as much as possible
+- If tables, graphs or diagrams are described in text, include those descriptions
+
+Just provide the extracted text in this format, with no additional analysis or explanation."""
+
+            # Convert PIL Image to the format expected by Gemini
+            response = model.generate_content([{"mime_type": "image/png", "data": image_data}, prompt])
+            response_text = response.text.strip()
+
+            # Parse the response to extract passage, question and answers
+            question_info = {"passage": "", "question": "", "answers": []}
+            
+            # Check for the different sections
+            passage_present = "PASSAGE:" in response_text
+            question_present = "QUESTION:" in response_text
+            choices_present = "CHOICES:" in response_text
+            
+            if passage_present and question_present and choices_present:
+                # Split the text by the major sections
+                passage_parts = response_text.split("QUESTION:")
+                passage_text = passage_parts[0].replace("PASSAGE:", "").strip()
+                
+                remaining_text = passage_parts[1]
+                question_parts = remaining_text.split("CHOICES:")
+                question_text = question_parts[0].strip()
+                choices_text = question_parts[1].strip() if len(question_parts) > 1 else ""
+                
+                # Handle case where passage contains "No passage"
+                if passage_text.lower() == "no passage":
+                    question_info["passage"] = ""
+                else:
+                    question_info["passage"] = passage_text
+                
+                question_info["question"] = question_text
+                question_info["answers"] = [choice.strip() for choice in choices_text.split(',')]
+            else:
+                # Fallback to line-by-line parsing
+                lines = response_text.split('\n')
+                passage_lines = []
+                question_lines = []
+                in_passage = False
+                in_question = False
+                
+                for line in lines:
+                    if line.startswith("PASSAGE:"):
+                        in_passage = True
+                        in_question = False
+                        passage_line = line.replace("PASSAGE:", "").strip()
+                        if passage_line and passage_line.lower() != "no passage":
+                            passage_lines.append(passage_line)
+                    elif line.startswith("QUESTION:"):
+                        in_passage = False
+                        in_question = True
+                        question_lines.append(line.replace("QUESTION:", "").strip())
+                    elif line.startswith("CHOICES:"):
+                        in_passage = False
+                        in_question = False
+                        choices_text = line.replace("CHOICES:", "").strip()
+                        question_info["answers"] = [choice.strip() for choice in choices_text.split(',')]
+                    elif in_passage:
+                        passage_lines.append(line.strip())
+                    elif in_question:
+                        question_lines.append(line.strip())
+                
+                # Join the lines for passage and question
+                if passage_lines:
+                    passage_text = "\n".join(passage_lines)  # Preserve paragraph structure
+                    question_info["passage"] = passage_text
+                
+                if question_lines:
+                    question_text = " ".join(question_lines)
+                    question_info["question"] = question_text
+            
+            # Additional cleaning if needed
+            question_info["question"] = ' '.join(question_info["question"].split())
+            
+            return question_info
+
+        except Exception as e:
+            print(f"Error extracting question info: {str(e)}")
+            return {"passage": "", "question": "", "answers": []}
+
+    def generate_new_question(self, original_passage, original_question, original_answers):
+        try:
+            # Use a more capable model for generating new questions
+            model = self.get_model(task_type="default")
+            
+            # Create a formatted string of the original answers
+            formatted_answers = ', '.join(original_answers)
+            
+            # Determine if we have a passage and adjust the prompt accordingly
+            has_passage = original_passage and len(original_passage.strip()) > 0
+            
+            # Craft prompt for generating a new question of the same type but with different context
+            if has_passage:
+                prompt = f"""I'll provide you with an example reading passage, question, and answer choices. Please create a NEW passage and question of the SAME TYPE but with COMPLETELY DIFFERENT CONTEXT.
+
+ORIGINAL PASSAGE: 
+{original_passage}
+
+ORIGINAL QUESTION: {original_question}
+
+ORIGINAL CHOICES: {formatted_answers}
+
+Requirements for the new passage and question:
+1. Create a NEW PASSAGE that follows the SAME STYLE, LENGTH, and COMPLEXITY as the original
+2. If the original passage is about a specific topic (e.g., science, history, literature), create a new passage about a DIFFERENT but RELATED topic
+3. Maintain the same READING LEVEL and TONE as the original passage
+4. Follow the EXACT SAME PATTERN and FORMAT for the question as the original
+5. If the original uses specific names, places, or scenarios, use DIFFERENT ones
+6. Maintain the same DIFFICULTY LEVEL
+7. Create PLAUSIBLE but DIFFERENT answer choices in the same format
+8. The new question should relate to the new passage in the same way the original question related to the original passage
+
+Format your response as follows:
+PASSAGE: [your new passage text]
+QUESTION: [your new question]
+CHOICES: [A. first choice], [B. second choice], [C. third choice], [D. fourth choice]
+
+IMPORTANT: Just provide the new passage, question and answer choices in this format, with no additional explanation."""
+            else:
+                prompt = f"""I'll provide you with an example question and its answer choices. Please create a NEW question of the SAME TYPE but with COMPLETELY DIFFERENT CONTEXT.
+
+ORIGINAL QUESTION: {original_question}
+ORIGINAL CHOICES: {formatted_answers}
+
+Requirements for the new question:
+1. Follow the EXACT SAME PATTERN and FORMAT as the original question
+2. Use the SAME TYPE of math or scientific concept
+3. If the original uses specific numbers, use DIFFERENT numbers in your version
+4. If the original uses specific names, places, or scenarios, use DIFFERENT ones
+5. Maintain the same DIFFICULTY LEVEL
+6. Create PLAUSIBLE but DIFFERENT answer choices in the same format
+7. If the original contained a graph or diagram description, replace with a different but similar graph/diagram description
+
+Format your response as follows:
+QUESTION: [your new question]
+CHOICES: [A. first choice], [B. second choice], [C. third choice], [D. fourth choice]
+
+IMPORTANT: Just provide the new question and answer choices in this format, with no additional explanation."""
+
+            # Generate response
+            response = model.generate_content(prompt)
+            response_text = response.text.strip()
+            
+            # Parse the response to extract the new passage, question and answers
+            new_question_info = {"passage": "", "question": "", "answers": []}
+            
+            # Parse based on whether we expect a passage or not
+            if has_passage and "PASSAGE:" in response_text and "QUESTION:" in response_text and "CHOICES:" in response_text:
+                # Split by the major sections
+                passage_parts = response_text.split("QUESTION:")
+                passage_text = passage_parts[0].replace("PASSAGE:", "").strip()
+                
+                remaining_text = passage_parts[1]
+                question_parts = remaining_text.split("CHOICES:")
+                question_text = question_parts[0].strip()
+                choices_text = question_parts[1].strip() if len(question_parts) > 1 else ""
+                
+                new_question_info["passage"] = passage_text
+                new_question_info["question"] = question_text
+                new_question_info["answers"] = [choice.strip() for choice in choices_text.split(',')]
+            elif "QUESTION:" in response_text and "CHOICES:" in response_text:
+                # No passage format, just question and choices
+                parts = response_text.split("CHOICES:")
+                question_part = parts[0].strip()
+                choices_part = parts[1].strip() if len(parts) > 1 else ""
+                
+                # Extract the question text
+                question_text = question_part.replace("QUESTION:", "").strip()
+                new_question_info["question"] = question_text
+                
+                # Extract the choices
+                new_question_info["answers"] = [choice.strip() for choice in choices_part.split(',')]
+            else:
+                # Fallback to line-by-line parsing
+                lines = response_text.split('\n')
+                passage_lines = []
+                question_lines = []
+                in_passage = False
+                in_question = False
+                
+                for line in lines:
+                    if line.startswith("PASSAGE:"):
+                        in_passage = True
+                        in_question = False
+                        passage_line = line.replace("PASSAGE:", "").strip()
+                        if passage_line:
+                            passage_lines.append(passage_line)
+                    elif line.startswith("QUESTION:"):
+                        in_passage = False
+                        in_question = True
+                        question_lines.append(line.replace("QUESTION:", "").strip())
+                    elif line.startswith("CHOICES:"):
+                        in_passage = False
+                        in_question = False
+                        choices_text = line.replace("CHOICES:", "").strip()
+                        new_question_info["answers"] = [choice.strip() for choice in choices_text.split(',')]
+                    elif in_passage:
+                        passage_lines.append(line.strip())
+                    elif in_question:
+                        question_lines.append(line.strip())
+                
+                # Join the lines for passage and question
+                if passage_lines:
+                    passage_text = "\n".join(passage_lines)  # Preserve paragraph structure
+                    new_question_info["passage"] = passage_text
+                
+                if question_lines:
+                    question_text = " ".join(question_lines)
+                    new_question_info["question"] = question_text
+            
+            # Additional cleaning if needed
+            new_question_info["question"] = ' '.join(new_question_info["question"].split())
+            
+            return new_question_info
+            
+        except Exception as e:
+            print(f"Error generating new question: {str(e)}")
+            return {"passage": "", "question": "", "answers": []}
+
     def process_uploaded_image(self, image_data):
         try:
             # Convert bytes to PIL Image
             image = Image.open(io.BytesIO(image_data))
 
-            model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
+            model = self.get_model(task_type="image")
             prompt = """Analyze this graph image and provide TWO separate sections:
 
 SECTION 1 - Graph Analysis (for recreation):
@@ -253,6 +609,7 @@ Please format your response with clear section headers."""
                         question_info["answers"] = [ans.strip() for ans in answers_text.split(',')]
 
             # Generate matplotlib code without question information
+            code_model = self.get_model(task_type="code")
             code_prompt = f'''Generate precise matplotlib code that will EXACTLY match the graph description with perfect accuracy:
 "{graph_analysis}"
 
@@ -290,8 +647,8 @@ Requirements:
      * Plot EXACT data point coordinates
      * Ensure intersections occur at PRECISE points
      * Use exact numerical values:
-       x1, y1 = [0, 20, 40], [0, 30, 60]  # First line
-       x2, y2 = [0, 20, 40], [60, 30, 0]  # Second line
+        x1, y1 = [0, 20, 40], [0, 30, 60]  # First line
+        x2, y2 = [0, 20, 40], [60, 30, 0]  # Second line
      * High-resolution plotting: plt.plot(x, y, '-', linewidth=1.5)
 
    For geometric shapes:
@@ -369,7 +726,7 @@ Requirements:
 Generate matplotlib code that reproduces ONLY the graph with perfect accuracy.
 Focus on EXACT numerical values and precise positioning of graph elements ONLY.'''
 
-            code_response = model.generate_content(code_prompt)
+            code_response = code_model.generate_content(code_prompt)
             self.current_description = f"Graph Analysis:\n{graph_analysis}\n\nSuggested Matplotlib Code:\n{code_response.text}"
 
             return {
@@ -419,21 +776,35 @@ def process_image():
         image.save(buf, format='PNG')
         image_data = buf.getvalue()
 
-        # Process image and get description
+        # Process image to extract graph information
         result = graph_generator.process_uploaded_image(image_data)
-
-        # Generate graph from the description
-        if result and 'description' in result:
-            graph_description = result['description']
-            graph_buf = graph_generator.generate_graph_from_description(graph_description)
-            if graph_buf:
-                # Convert plot to base64
-                graph_img_str = base64.b64encode(graph_buf.getvalue()).decode()
-                result['graph'] = graph_img_str
+        
+        if result is None:
+            result = {"description": "", "question_info": {"question": "", "answers": []}}
+        
+        # In parallel, extract question and answer choices using the dedicated method
+        question_info = graph_generator.extract_question_info(image_data)
+        
+        # Update the result with the question info from the dedicated model
+        if result:
+            # Store the original description for graph generation
+            graph_description = result.get('description', '')
+            
+            # Replace the question info with our dedicated extraction
+            result['question_info'] = question_info
+            
+            # Generate graph from the description
+            if graph_description:
+                graph_buf = graph_generator.generate_graph_from_description(graph_description)
+                if graph_buf:
+                    # Convert plot to base64
+                    graph_img_str = base64.b64encode(graph_buf.getvalue()).decode()
+                    result['graph'] = graph_img_str
 
         return jsonify(result)
 
     except Exception as e:
+        print(f"Error in process_image: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/correct', methods=['POST'])
@@ -457,8 +828,8 @@ Requested correction:
 
 Generate a revised description that precisely incorporates this correction while keeping all other elements the same.'''
 
-        # Generate new description
-        model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
+        # Generate new description using the appropriate model
+        model = graph_generator.get_model(task_type="default")
         response = model.generate_content(enhanced_prompt)
         new_description = response.text.strip()
 
@@ -477,9 +848,152 @@ Generate a revised description that precisely incorporates this correction while
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/toggle-model-preference', methods=['POST'])
+def toggle_model_preference():
+    try:
+        data = request.json
+        preference = data.get('preference')
+        
+        if preference not in ['slow', 'fast']:
+            return jsonify({'error': 'Invalid preference. Must be "slow" or "fast"'}), 400
+        
+        # Update the model preference
+        graph_generator.model_preference = preference
+        success = graph_generator.save_model_preference()
+        
+        if not success:
+            return jsonify({'error': 'Failed to save model preference'}), 500
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'Model preference set to {preference}',
+            'preference': preference
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/get-model-preference', methods=['GET'])
+def get_model_preference():
+    return jsonify({
+        'preference': graph_generator.model_preference
+    })
+
+@app.route('/api/get-api-key', methods=['GET'])
+def get_api_key():
+    """Returns information about whether an API key is set (not the actual key)"""
+    has_api_key = graph_generator.api_key is not None and graph_generator.api_key.strip() != ""
+    return jsonify({
+        'hasApiKey': has_api_key
+    })
+
+@app.route('/api/update-api-key', methods=['POST'])
+def update_api_key():
+    """Updates the API key with a new value"""
+    try:
+        data = request.json
+        new_api_key = data.get('api_key', '').strip()
+        
+        if not new_api_key:
+            return jsonify({
+                'status': 'error',
+                'error': 'API anahtarı boş olamaz'
+            }), 400
+            
+        success, error_message = graph_generator.update_api_key(new_api_key)
+        
+        if success:
+            return jsonify({
+                'status': 'success',
+                'message': 'API anahtarı başarıyla güncellendi'
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'error': error_message
+            }), 400
+    
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
+
+@app.route('/api/generate-new-question', methods=['POST'])
+def generate_new_question():
+    try:
+        # Check if the API key is configured
+        if not graph_generator.api_key:
+            return jsonify({'error': 'API key not configured. Please add your Google API key to config.json'}), 401
+
+        # Validate that an image was provided
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image provided'}), 400
+
+        image_file = request.files['image']
+        
+        # Validate the file is not empty
+        if image_file.filename == '':
+            return jsonify({'error': 'Empty file provided'}), 400
+            
+        try:
+            # Try to open the image to confirm it's valid
+            image = Image.open(image_file)
+            
+            # Reset the file pointer after reading
+            image_file.seek(0)
+            
+            # Convert to format suitable for Gemini's API
+            buf = io.BytesIO()
+            image.save(buf, format='PNG')
+            image_data = buf.getvalue()
+        except Exception as img_err:
+            print(f"Error processing image: {str(img_err)}")
+            return jsonify({'error': f'Invalid image file: {str(img_err)}'}), 400
+
+        # First extract the original question and answers from the image
+        try:
+            question_info = graph_generator.extract_question_info(image_data)
+            
+            if not question_info['question']:
+                return jsonify({'error': 'Could not extract question from the image'}), 400
+        except Exception as extract_err:
+            print(f"Error extracting question: {str(extract_err)}")
+            return jsonify({'error': f'Failed to extract question: {str(extract_err)}'}), 500
+            
+        # Generate a new question based on the extracted question and passage
+        try:
+            new_question_info = graph_generator.generate_new_question(
+                question_info.get('passage', ''), 
+                question_info['question'], 
+                question_info['answers']
+            )
+            
+            if not new_question_info['question']:
+                return jsonify({'error': 'Failed to generate new question'}), 500
+        except Exception as gen_err:
+            print(f"Error generating new question: {str(gen_err)}")
+            return jsonify({'error': f'Failed to generate new question: {str(gen_err)}'}), 500
+        
+        # Include both original and new content in the response
+        result = {
+            'original_passage': question_info.get('passage', ''),
+            'original_question': question_info['question'],
+            'original_answers': question_info['answers'],
+            'new_passage': new_question_info.get('passage', ''),
+            'new_question': new_question_info['question'],
+            'new_answers': new_question_info['answers']
+        }
+        
+        return jsonify(result)
+
+    except Exception as e:
+        print(f"Error in generate_new_question: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

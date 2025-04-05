@@ -562,7 +562,7 @@
         function showModelChangeToast(preference) {
             // Create and show a toast notification for model change
             const toast = document.createElement('div');
-            toast.className = 'fixed bottom-4 right-4 glass-card p-4 text-white z-50 animate-tooltip';
+            toast.className = 'fixed bottom-4 right-4 glass-card p-4 text-white z-50 animate-tooltip toast-notification';
             toast.innerHTML = preference === 'slow' 
                 ? 'Kaliteli Moda Geçildi (Daha Yavaş, Daha Doğru)' 
                 : 'Hızlı Moda Geçildi (Daha Hızlı)';
@@ -578,7 +578,7 @@
         function showApiKeyToast(success, errorMessage) {
             // Create and show a toast notification for API key operations
             const toast = document.createElement('div');
-            toast.className = 'fixed bottom-4 right-4 glass-card p-4 text-white z-50 animate-tooltip';
+            toast.className = 'fixed bottom-4 right-4 glass-card p-4 text-white z-50 animate-tooltip toast-notification';
             
             if (success) {
                 toast.innerHTML = 'API anahtarı başarıyla kaydedildi';
@@ -592,6 +592,26 @@
             setTimeout(() => {
                 toast.remove();
             }, 5000);
+        }
+        
+        function showImageProcessingToast() {
+            // Create and show a toast notification for image processing
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 glass-card p-4 text-white z-50 animate-tooltip toast-notification';
+            toast.innerHTML = 'Görsel işleniyor...';
+            
+            document.body.appendChild(toast);
+            
+            // Remove toast after animation completes
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+        
+        function clearExistingToasts() {
+            // Remove any existing toast notifications
+            const existingToasts = document.querySelectorAll('.toast-notification');
+            existingToasts.forEach(toast => toast.remove());
         }
 
         function previewImage(input) {
@@ -613,7 +633,16 @@
         }
 
         function showLoading() {
-            document.getElementById('loading').style.display = 'flex';
+            // Default loading without specific message
+            showLoadingWithMessage('İşleniyor...');
+        }
+        
+        function showLoadingWithMessage(message) {
+            // Show loading indicator with specific message
+            const loading = document.getElementById('loading');
+            const loadingText = document.getElementById('loadingText');
+            loadingText.textContent = message;
+            loading.style.display = 'flex';
         }
 
         function hideLoading() {
@@ -1066,7 +1095,14 @@
                 return;
             }
             
-            showLoading();
+            // Clear any existing toast notifications
+            clearExistingToasts();
+            
+            // Show a toast for image processing
+            showImageProcessingToast();
+            
+            // Show loading with the correct message for image processing
+            showLoadingWithMessage('Görsel işleniyor...');
             
             const formData = new FormData();
             formData.append('image', window.questionFile);

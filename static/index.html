@@ -722,8 +722,27 @@
 
                 document.getElementById('description').value = data.description || '';
 
-                if (data.question_info && (data.question_info.question || (data.question_info.answers && data.question_info.answers.length > 0))) {
+                if (data.question_info && (data.question_info.question || data.question_info.passage || (data.question_info.answers && data.question_info.answers.length > 0))) {
                     document.getElementById('questionInfo').classList.remove('hidden');
+                    
+                    // Check for passage and display it if available
+                    if (data.question_info.passage) {
+                        // Create or ensure the passage container exists
+                        let passageContainer = document.getElementById('passageContainer');
+                        if (!passageContainer) {
+                            passageContainer = document.createElement('div');
+                            passageContainer.id = 'passageContainer';
+                            passageContainer.className = 'mb-4 p-3 bg-gray-50 rounded-lg';
+                            
+                            // Insert at the beginning of question info
+                            const questionInfo = document.getElementById('questionInfo');
+                            questionInfo.insertBefore(passageContainer, questionInfo.firstChild);
+                        } else {
+                            passageContainer.classList.remove('hidden');
+                        }
+                        passageContainer.textContent = data.question_info.passage;
+                    }
+                    
                     document.getElementById('questionText').textContent = data.question_info.question || '';
 
                     const answerList = document.getElementById('answerChoices');
@@ -737,6 +756,25 @@
                     }
 
                     // Populate the display area in the graph section
+                    
+                    // Also display the passage in the graph display area if available
+                    if (data.question_info.passage) {
+                        // Create or ensure the passage container exists in display area
+                        let displayPassageContainer = document.getElementById('displayPassageContainer');
+                        if (!displayPassageContainer) {
+                            displayPassageContainer = document.createElement('div');
+                            displayPassageContainer.id = 'displayPassageContainer';
+                            displayPassageContainer.className = 'mb-4 p-3 bg-gray-50 rounded-lg';
+                            
+                            // Insert at the beginning of question display area
+                            const questionDisplayArea = document.getElementById('questionDisplayArea');
+                            questionDisplayArea.insertBefore(displayPassageContainer, questionDisplayArea.firstChild);
+                        } else {
+                            displayPassageContainer.classList.remove('hidden');
+                        }
+                        displayPassageContainer.textContent = data.question_info.passage;
+                    }
+                    
                     document.getElementById('displayQuestionText').textContent = data.question_info.question || '';
                     const displayAnswerList = document.getElementById('displayAnswerChoices');
                     displayAnswerList.innerHTML = '';

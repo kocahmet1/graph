@@ -325,7 +325,11 @@ Focus on EXACT numerical values and precise positioning of graph elements ONLY.'
 Format your response as follows:
 PASSAGE: [complete passage text if present, otherwise "No passage"]
 QUESTION: [full question text]
-CHOICES: [A. first choice], [B. second choice], [C. third choice], [D. fourth choice]
+CHOICES:
+A. [complete first choice text]
+B. [complete second choice text]
+C. [complete third choice text]
+D. [complete fourth choice text]
 
 VERY IMPORTANT INSTRUCTIONS:
 - INCLUDE the ENTIRE passage and ALL text in the image
@@ -335,6 +339,11 @@ VERY IMPORTANT INSTRUCTIONS:
 - Include ALL formulas, symbols, and special characters exactly as shown
 - Preserve mathematical notations, equations, and formatting as much as possible
 - If tables, graphs or diagrams are described in text, include those descriptions
+- For each answer choice, present it as ONE COMPLETE STATEMENT
+- Do NOT include bullet points (•) at the beginning of answer choices
+- Do NOT include square brackets around answer choices
+- Do NOT split a single answer choice into multiple parts
+- Put each answer choice on its own line, preceded by its letter (A, B, C, D)
 
 Just provide the extracted text in this format, with no additional analysis or explanation."""
 
@@ -367,7 +376,15 @@ Just provide the extracted text in this format, with no additional analysis or e
                     question_info["passage"] = passage_text
                 
                 question_info["question"] = question_text
-                question_info["answers"] = [choice.strip() for choice in choices_text.split(',')]
+                # Split by each letter choice on a new line rather than by commas
+                import re
+                answer_pattern = re.compile(r'([A-D]\..+?)(?=[A-D]\.|$)', re.DOTALL)
+                matches = answer_pattern.findall(choices_text + "\n")
+                if matches:
+                    question_info["answers"] = [match.strip() for match in matches]
+                else:
+                    # Fallback to old method if regex doesn't match anything
+                    question_info["answers"] = [choice.strip() for choice in choices_text.split(',')]
             else:
                 # Fallback to line-by-line parsing
                 lines = response_text.split('\n')
@@ -391,7 +408,44 @@ Just provide the extracted text in this format, with no additional analysis or e
                         in_passage = False
                         in_question = False
                         choices_text = line.replace("CHOICES:", "").strip()
-                        question_info["answers"] = [choice.strip() for choice in choices_text.split(',')]
+                        
+                        # Extract answer choices by letter (A, B, C, D) format
+                        answer_list = []
+                        lines = choices_text.strip().split('\n')
+                        
+                        # Try to detect answer format - first check if they're on separate lines
+                        if len(lines) > 1 and any(re.match(r'^[A-D]\. ', line.strip()) for line in lines):
+                            current_answer = ""
+                            current_letter = ""
+                            
+                            for answer_line in lines:
+                                # If this line starts a new answer
+                                if re.match(r'^[A-D]\. ', answer_line.strip()):
+                                    # Save the previous answer if there was one
+                                    if current_answer:
+                                        answer_list.append(current_answer.strip())
+                                    # Start a new answer
+                                    current_answer = answer_line.strip()
+                                    current_letter = answer_line[0]
+                                else:
+                                    # Continue the current answer
+                                    current_answer += " " + answer_line.strip()
+                            
+                            # Don't forget the last answer
+                            if current_answer:
+                                answer_list.append(current_answer.strip())
+                        else:
+                            # Try comma separation or brackets as fallback
+                            import re
+                            answer_pattern = re.compile(r'([A-D]\..+?)(?=[A-D]\.|$)', re.DOTALL)
+                            matches = answer_pattern.findall(choices_text + "\n")
+                            if matches:
+                                answer_list = [match.strip() for match in matches]
+                            else:
+                                # Last resort fallback to old method
+                                answer_list = [choice.strip() for choice in choices_text.split(',')]
+                        
+                        question_info["answers"] = answer_list
                     elif in_passage:
                         passage_lines.append(line.strip())
                     elif in_question:
@@ -408,6 +462,21 @@ Just provide the extracted text in this format, with no additional analysis or e
             
             # Additional cleaning if needed
             question_info["question"] = ' '.join(question_info["question"].split())
+            
+            # Clean up the answer choices to remove brackets, bullet points, etc.
+            cleaned_answers = []
+            for answer in question_info["answers"]:
+                # Remove any trailing square brackets
+                answer = re.sub(r'\]\s*$', '', answer)
+                # Remove any leading square brackets
+                answer = re.sub(r'^\s*\[', '', answer)
+                # Remove bullet points
+                answer = re.sub(r'^\s*•\s*', '', answer)
+                # Clean up whitespace
+                answer = answer.strip()
+                cleaned_answers.append(answer)
+            
+            question_info["answers"] = cleaned_answers
             
             return question_info
 
@@ -605,7 +674,13 @@ IMPORTANT: Just provide the new question and answer choices in this format, with
 1.  **Passage/Question Text:**
     *   Transcribe the entire block of text appearing distinctly *below* the graph area (and its legend, if the legend is positioned there). This includes any introductory passage/scenario, the specific question asked, and any source/caption integrated within this block. Ensure verbatim transcription.
 2.  **Answer Choices:**
-    *   List all provided answer choices (e.g., A, B, C, D), including their identifying letter/number and full text, verbatim.
+    *   Format each answer choice on its own line as follows:
+        A. [complete text of first choice without bullet points]
+        B. [complete text of second choice without bullet points]
+    *   For each answer choice, present it as ONE COMPLETE STATEMENT
+    *   Do NOT include bullet points (•) at the beginning of answer choices
+    *   Do NOT include square brackets at the beginning or end of answer choices
+    *   Do NOT split a single answer choice into multiple parts
 
 ---
 

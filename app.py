@@ -560,53 +560,116 @@ IMPORTANT: Just provide the new question and answer choices in this format, with
             image = Image.open(io.BytesIO(image_data))
 
             model = self.get_model(task_type="image")
-            prompt = """Analyze this graph image and provide TWO separate sections:
+            prompt = """**Objective:** Analyze the provided image containing a graph and associated text from a standardized test question. Extract TWO distinct sets of information for different purposes:
+    1.  **Graph Data:** Detailed parameters necessary to recreate the visual graph programmatically (e.g., using Matplotlib), including all integrated text elements like titles, axis labels, and legends.
+    2.  **Question/Context Text:** The verbatim text content located *below* the graph area (and its legend, if applicable), comprising the passage/setup, the question itself, and the answer choices.
 
-SECTION 1 - Graph Analysis (for recreation):
-1. Graph Type: Determine if it's a table, bar chart, line chart, or geometric shape
-2. Data Content:
-   - For tables: Describe rows, columns, and cell values
-   - For charts: List data points, axes ranges, and values
-   - For shapes: Describe dimensions and coordinates
-3. Visual Elements:
-   - Colors used
-   - Line styles (if applicable)
-   - Markers or points (if applicable)
-   - Grid presence
-4. Labels and Text:
-   - Title (if any)
-   - Axis labels
-   - Legend content
-5. Special Features:
-   - Annotations
-   - Custom styling
+**Output Format:** Provide the analysis in TWO clearly separated sections below. Ensure the information in Section 1 is focused *only* on the visual elements and directly associated text labels needed for plotting. Section 2 should capture *only* the distinct text block appearing below the graph. Use markdown formatting for clarity. Be precise; if exact visual values aren't readable, estimate and note it (e.g., `~5.5` or `value (estimated)`).
 
-SECTION 2 - Question Information:
-1. Question Text: The complete question text
-2. Answer Choices: List all answer choices
+---
 
-Please format your response with clear section headers."""
+**SECTION 1: Graph Recreation Parameters (Visual Elements & Integrated Text)**
+
+1.  **Overall Plot Type:**
+    *   Identify the primary graph type (e.g., `line chart`, `scatter plot`, `bar chart`, `stacked bar chart`, `pie chart`, `histogram`, `table`, `geometric diagram`).
+
+2.  **Data Series & Values:**
+    *   For **Charts (Line, Scatter, Bar, etc.)**:
+        *   Identify each distinct data series.
+        *   For each series: `Series Name/Label:` (Match legend), `Data Points:` (e.g., `[(x1, y1), ...]`, `Categories: [...], Values: [...]`), `Estimation Notes:`.
+    *   For **Tables**: `Headers:`, `Rows:`.
+    *   For **Geometric Shapes**: Describe shape and parameters (e.g., `center`, `radius`, `vertices`).
+
+3.  **Axes Configuration:**
+    *   **X-Axis:** `Label:` (Text on axis), `Range: [min, max]`, `Scale: linear/log`, `Ticks: [tick1, ...]`, `Tick Labels:` (If different).
+    *   **Y-Axis:** `Label:`, `Range: [min, max]`, `Scale: linear/log`, `Ticks: [tick1, ...]`, `Tick Labels:`.
+    *   **Secondary Y-Axis:** (If present) Describe similarly.
+
+4.  **Visual Styling:**
+    *   **For each Data Series:** `Color:`, `Line Style:`, `Marker Style:`, `Bar Style:`.
+    *   **General Plot Styles:** `Grid: present/absent` (specify details), `Background Color:`.
+
+5.  **Integrated Text Elements:** (Text physically part of or immediately adjacent to the graph visualization)
+    *   `Title:` Text content (usually above).
+    *   `Legend:`
+        *   `Present: yes/no`.
+        *   `Position:` Describe location relative to plot (e.g., `upper right`, `below plot area but above question text`).
+        *   `Entries:` List the text labels (should match `Series Name/Label` from point 2).
+    *   `Annotations:` Text annotations *within* the plot area or pointing directly to plot features. Provide: `Text:`, `Location: (approx. x, y)`, `Arrow: yes/no`.
+    *   *(Note: Axis labels are captured in point 3)*.
+
+---
+
+**SECTION 2: Question/Context Text (Located Below Graph Area)**
+
+1.  **Passage/Question Text:**
+    *   Transcribe the entire block of text appearing distinctly *below* the graph area (and its legend, if the legend is positioned there). This includes any introductory passage/scenario, the specific question asked, and any source/caption integrated within this block. Ensure verbatim transcription.
+2.  **Answer Choices:**
+    *   List all provided answer choices (e.g., A, B, C, D), including their identifying letter/number and full text, verbatim.
+
+---
+
+**Important Considerations for the Model:**
+*   **Section 1 vs. Section 2 Distinction:** Section 1 describes the *graph visualization* and its immediate labels/legend. Section 2 transcribes the separate *text block below* the graph containing the problem setup, question, and answers.
+*   **Accuracy:** Prioritize accuracy for data points, coordinates, and verbatim text transcription. Label estimations clearly in Section 1.
+*   **Structure:** Use the requested structured formats (key-value pairs, lists, coordinates) consistently.
+*   **Completeness:** Capture all visible elements pertinent to each section. If no graph or no question text is present, state that clearly."""
 
             # Convert PIL Image to the format expected by Gemini
             response = model.generate_content([{"mime_type": "image/png", "data": image_data}, prompt])
             full_response = response.text
 
             # Split the response into graph analysis and question info
-            sections = full_response.split("SECTION 2 - Question Information:")
-            graph_analysis = sections[0].replace("SECTION 1 - Graph Analysis (for recreation):", "").strip()
+            sections = full_response.split("**SECTION 2: Question/Context Text")
+            graph_analysis = sections[0].replace("**SECTION 1: Graph Recreation Parameters (Visual Elements & Integrated Text)**", "").strip()
             question_section = sections[1].strip() if len(sections) > 1 else ""
 
             # Extract question and answers
-            question_info = {"question": "", "answers": []}
+            question_info = {"question": "", "answers": [], "passage": ""}
             if question_section:
-                lines = question_section.split('\n')
-                for line in lines:
-                    line = line.strip()
-                    if line.startswith("1. Question Text:"):
-                        question_info["question"] = line.replace("1. Question Text:", "").strip()
-                    elif line.startswith("2. Answer Choices:"):
-                        answers_text = line.replace("2. Answer Choices:", "").strip()
-                        question_info["answers"] = [ans.strip() for ans in answers_text.split(',')]
+                # Split into passage/question part and answer choices part
+                parts = question_section.split("**Answer Choices:**")
+                if len(parts) > 1:
+                    # Process the passage/question text
+                    question_text_part = parts[0]
+                    
+                    # Look for the passage/question text section
+                    if "**Passage/Question Text:**" in question_text_part:
+                        passage_question_text = question_text_part.split("**Passage/Question Text:**")[1].strip()
+                        
+                        # Try to separate passage from question if both exist
+                        # This is a heuristic - we assume questions often start with keywords like "What", "Which", "How", etc.
+                        question_keywords = ["What", "Which", "How", "Why", "When", "Where", "Who", "In which", "Calculate"]
+                        
+                        found_question = False
+                        lines = passage_question_text.split('\n')
+                        
+                        for i, line in enumerate(lines):
+                            # Check if line starts with a question word or contains a question mark
+                            if any(line.strip().startswith(keyword) for keyword in question_keywords) or '?' in line:
+                                # Found the likely question
+                                question_info["passage"] = '\n'.join(lines[:i]).strip()
+                                question_info["question"] = '\n'.join(lines[i:]).strip()
+                                found_question = True
+                                break
+                        
+                        # If we couldn't separate, just use the whole text as the question
+                        if not found_question:
+                            question_info["question"] = passage_question_text
+                    
+                    # Process the answer choices
+                    answers_part = parts[1].strip()
+                    answer_lines = [line.strip() for line in answers_part.split('\n') if line.strip()]
+                    
+                    # Extract answers - they're typically in format like "A. Answer text"
+                    answers = []
+                    for line in answer_lines:
+                        if line and len(line) > 2 and line[0].isalpha() and line[1] == '.':
+                            answers.append(line)
+                        elif line and len(line) > 2 and line[0].isdigit() and line[1] == '.':
+                            answers.append(line)
+                    
+                    question_info["answers"] = answers
 
             # Generate matplotlib code without question information
             code_model = self.get_model(task_type="code")

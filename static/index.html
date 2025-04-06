@@ -399,7 +399,9 @@
                                     <div id="newQuestionContainer" class="mb-3">
                                         <p id="newQuestion" class="text-black text-sm font-medium"></p>
                                     </div>
-                                    <div id="newAnswers" class="text-black text-sm grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                                    <div id="newAnswers" class="flex flex-col space-y-2">
+                                        <!-- New answers will be populated here by JS -->
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1280,7 +1282,7 @@
             newAnswers.innerHTML = '';
             data.new_answers.forEach(answer => {
                 const div = document.createElement('div');
-                div.className = 'p-2 rounded border border-gray-300 bg-gray-50';
+                div.className = 'p-2 rounded border border-gray-300 bg-gray-50 text-black'; 
                 div.textContent = answer;
                 newAnswers.appendChild(div);
             });

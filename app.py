@@ -53,7 +53,7 @@ class WebGraphGenerator:
                 genai.configure(api_key=api_key)
                 
                 # Test the API key with a small request
-                model = genai.GenerativeModel('gemini-2.0-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
                 response = model.generate_content("Test")
                 
                 # If we got here, the API key is valid
@@ -80,7 +80,7 @@ class WebGraphGenerator:
                 genai.configure(api_key=new_api_key)
                 
                 # Try to initialize a model with the new API key to verify it works
-                model = genai.GenerativeModel('gemini-2.0-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
                 response = model.generate_content("Test")
                 
                 # If we get here, the API key is valid
@@ -124,15 +124,15 @@ class WebGraphGenerator:
         task_type: Can be 'default', 'image', 'code', or other task-specific identifiers
         """
         if self.model_preference == "fast":
-            # Fast mode: use gemini-2.0-flash for everything
-            return genai.GenerativeModel('gemini-2.0-flash')
+            # Fast mode: use gemini-2.5-flash-preview-04-17 for everything
+            return genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
         else:
             # Slow mode: use the more capable model for complex tasks
             if task_type in ["default", "code", "graph_generation"]:
                 return genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
             else:
                 # For simpler tasks, still use the faster model
-                return genai.GenerativeModel('gemini-2.0-flash')
+                return genai.GenerativeModel('gemini-2.5-flash-preview-04-17')
 
     def save_model_preference(self):
         """Save the current model preference to config.json"""
